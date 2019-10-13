@@ -1,0 +1,252 @@
+<?php
+require_once 'cache-utils.php';
+
+if ( !defined('ABSPATH') ) exit;
+
+class SpeedUp_CacheManager {
+    
+    /**
+     * Instance of the object.
+     *
+     * @since  1.0.0
+     * @static
+     * @access public
+     * @var null|SpeedUp_CacheManager
+     */
+    public static $instance = null;
+    
+    
+    /**
+     * Access the single instance of this class.
+     *
+     * @since  1.0.0
+     * @access public
+     * @return SpeedUp_CacheManager
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     *
+     * @since  1.0.0
+     * @access private
+     * @return SpeedUp_CacheManager
+     */
+    private function __construct()
+    {
+        
+    }
+    
+    /**
+     * Output buffering.
+     *
+     * @since  1.0.0
+     * @access public
+     * @return string
+     */
+    public function ob_start($buffer) 
+    {
+        // Check if request is cacheable
+        if ( !$this->cacheable() ) {
+            return $buffer;
+        }
+        
+        // Don't cache non html buffer
+        if (stripos($buffer, '</html>') === false) {
+            return $buffer;
+        }
+        
+        // Don't cache buffer with DONOTCACHEPAGE string
+        if (stripos($buffer, 'DONOTCACHEPAGE') !== false) {
+            return $buffer;
+        }
+        
+        $url_path = $this->get_url_path();
+        
+        if( empty($url_path) ){
+            return $buffer;
+        }
+        
+        $cache_dir = SpeedUp_CacheUtils::get_cache_dir();
+        
+        $path = $cache_dir . $url_path;
+        
+        // Make sure we can read/write files to cache dir
+        if ( !is_dir( $path ) ) {
+            if ( !@mkdir( $path, 0777, true ) ) {
+                return $buffer;
+            }
+        }
+        
+        @file_put_contents( $path . '_index.html', $buffer . "\n<!-- Cache served by Speed Up - Page Cache, last modified: " . gmdate( 'D, d M Y H:i:s', time() ) . " GMT -->\n" );
+        
+        return $buffer;
+    }
+    
+    /**
+     * Optionally serve cache and exit
+     *
+     * @since 1.0
+     * @access public
+     * @return void
+     */
+    public function serve_file_cache() {
+        
+        // Check if request is cacheable
+        if ( !$this->cacheable() ) {
+            return;
+        }
+        
+        $url_path = $this->get_url_path();
+        
+        if( empty($url_path) ){
+            return;
+        }
+        
+        $cache_dir = SpeedUp_CacheUtils::get_cache_dir();
+        
+        $path = $cache_dir . $url_path . '_index.html';
+        
+        if ( @file_exists( $path ) && @is_readable( $path ) ) {
+            header('x-supc-managedby: PHP');
+            @readfile( $path );
+            exit;
+        }
+    }
+    
+    /**
+     * Check if request is cacheable.
+     * 
+     * @since 1.0.0
+     * @access private
+     * @return boolean
+     */
+    private function cacheable(){
+        
+        global $post;
+        
+        // Cache only HTTP GET request
+        if ( !isset($_SERVER['REQUEST_METHOD']) || strtoupper($_SERVER['REQUEST_METHOD']) !== 'GET') {
+            return false;
+        }
+        
+        // Don't cache when URL query string are defined
+        if ($_SERVER['QUERY_STRING'] !== '') {
+            return false;
+        }
+        
+        // Don't cache when DONOTCACHEPAGE is true
+        if( defined('DONOTCACHEPAGE') && DONOTCACHEPAGE ){
+            return false;
+        }
+        
+        // Don't cache during installing
+        if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ){
+            return false;
+        }
+        
+        // Don't cache ajax request
+        if ( defined( 'DOING_AJAX' ) && DOING_AJAX ){
+            return false;
+        }
+        
+        // Don't cache WordPress cron request
+        if ( defined('DOING_CRON') && DOING_CRON ) {
+            return false;
+        }
+        
+        // Don't cache WordPress admin
+        if ( defined('WP_ADMIN') ) {
+            return false;
+        }
+        
+        // Don't cache when is load only the half of WordPress
+        if ( defined('SHORTINIT') && SHORTINIT ) {
+            return false;
+        }
+        
+        // Don't cache Atom Publishing Protocol request
+        if ( defined( 'APP_REQUEST' ) && APP_REQUEST ) {
+            return false;
+        }
+        
+        // Don't cache XML-RPC API
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            return false;
+        }
+        
+        // Don't cache in console mode
+        if ( PHP_SAPI === 'cli' ) {
+            return false;
+        }
+        
+        // Don't cache if session is defined
+        if ( defined( 'SID' ) && SID != '' ) {
+            return false;
+        }
+        
+        // Don't cache if user is logged
+        if ( $this->has_cookie() ) {
+            return false;
+        }
+        
+        // Don't cache admin page
+        if ( function_exists('is_admin') && is_admin() ) {
+            return false;
+        }
+        
+        // Don't cache password protected.
+        if ( isset($post) && !empty($post->post_password) ) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Check if request has cookie.
+     *
+     * @since 1.0.0
+     * @access private
+     * @return boolean
+     */
+    private function has_cookie(){
+        // Don't cache if user has cookie.
+        if ( ! empty( $_COOKIE ) ) {
+            
+            $wp_cookies = array( 'comment_author', 'wp-postpass', 'wordpress_logged_in', 'wptouch_switch_toggle' );
+            
+            foreach ( $_COOKIE as $key => $value ) {
+                foreach ( $wp_cookies as $cookie ) {
+                    if ( strpos( strtolower($key), $cookie ) !== false ) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Get URL path for caching
+     *
+     * @since  1.0.0
+     * @access private
+     * @return string
+     */
+    private function get_url_path() 
+    {
+        $host = SpeedUp_CacheUtils::get_host();
+        if( empty($host) ){
+            return null;
+        }
+        $uri = strtok($_SERVER['REQUEST_URI'], '?');
+        $path = str_replace('/', DIRECTORY_SEPARATOR, $host . $uri);
+        return trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+}
