@@ -58,11 +58,13 @@ class SpeedUp_CacheManager {
         
         // Don't cache non html buffer
         if (stripos($buffer, '</html>') === false) {
+            $this->sendHeaderMiss('response not html');
             return $buffer;
         }
         
         // Don't cache buffer with DONOTCACHEPAGE string
         if (stripos($buffer, 'DONOTCACHEPAGE') !== false) {
+            $this->sendHeaderMiss('response contains DONOTCACHEPAGE string');
             return $buffer;
         }
         
@@ -132,76 +134,103 @@ class SpeedUp_CacheManager {
         
         // Cache only HTTP GET request
         if ( !isset($_SERVER['REQUEST_METHOD']) || strtoupper($_SERVER['REQUEST_METHOD']) !== 'GET') {
+            $this->sendHeaderMiss('REQUEST_METHOD not GET');
             return false;
         }
         
         // Don't cache when URL query string are defined
         if ($_SERVER['QUERY_STRING'] !== '') {
+            $this->sendHeaderMiss('QUERY_STRING not empty');
             return false;
         }
         
         // Don't cache when DONOTCACHEPAGE is true
         if( defined('DONOTCACHEPAGE') && DONOTCACHEPAGE ){
+            $this->sendHeaderMiss('DONOTCACHEPAGE costant is true');
             return false;
         }
         
         // Don't cache during installing
         if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ){
+            $this->sendHeaderMiss('WP_INSTALLING costant is true');
             return false;
         }
         
         // Don't cache ajax request
         if ( defined( 'DOING_AJAX' ) && DOING_AJAX ){
+            $this->sendHeaderMiss('DOING_AJAX costant is true');
             return false;
         }
         
         // Don't cache WordPress cron request
         if ( defined('DOING_CRON') && DOING_CRON ) {
+            $this->sendHeaderMiss('DOING_CRON costant is true');
             return false;
         }
         
         // Don't cache WordPress admin
         if ( defined('WP_ADMIN') ) {
+            $this->sendHeaderMiss('WP_ADMIN costant defined');
             return false;
         }
         
         // Don't cache when is load only the half of WordPress
         if ( defined('SHORTINIT') && SHORTINIT ) {
+            $this->sendHeaderMiss('SHORTINIT costant is true');
             return false;
         }
         
         // Don't cache Atom Publishing Protocol request
         if ( defined( 'APP_REQUEST' ) && APP_REQUEST ) {
+            $this->sendHeaderMiss('APP_REQUEST costant is true');
             return false;
         }
         
         // Don't cache XML-RPC API
         if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            $this->sendHeaderMiss('XMLRPC_REQUEST costant is true');
             return false;
         }
         
         // Don't cache in console mode
         if ( PHP_SAPI === 'cli' ) {
+            $this->sendHeaderMiss('PHP_SAPI is cli');
             return false;
         }
         
         // Don't cache if session is defined
         if ( defined( 'SID' ) && SID != '' ) {
+            $this->sendHeaderMiss('SID costant not empty');
             return false;
         }
         
         // Don't cache if user is logged
         if ( $this->has_cookie() ) {
+            $this->sendHeaderMiss(' request ha rejected COOKIES');
             return false;
         }
         
         // Don't cache admin page
         if ( function_exists('is_admin') && is_admin() ) {
+            $this->sendHeaderMiss('is_admin return true');
             return false;
         }
         
         // Don't cache password protected.
         if ( isset($post) && !empty($post->post_password) ) {
+            $this->sendHeaderMiss('post has password');
+            return false;
+        }
+        
+        // check if filter is false
+        if( apply_filters('speed-up-page-cache-cacheable', null) === true ){
+            $this->sendHeaderMiss('speed-up-page-cache-cacheable filter return true');
+            return false;
+        }
+        
+        // check if SUPC_CACHEABLE is false
+        if( defined( 'SUPC_CACHEABLE' ) && SUPC_CACHEABLE === false ){
+            $this->sendHeaderMiss('SUPC_CACHEABLE costant is false');
             return false;
         }
         
@@ -230,6 +259,19 @@ class SpeedUp_CacheManager {
             }
         }
         return false;
+    }
+    
+    /**
+     * Send the miss header.
+     *
+     * @since  1.0.2
+     * @access private
+     * @return string
+     */
+    private function sendHeaderMiss($reason){
+        if( !headers_sent() ){
+            header('x-supc-miss: ' . $reason );
+        }
     }
     
     /**
