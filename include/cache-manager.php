@@ -23,7 +23,8 @@ class SpeedUp_CacheManager {
      * @access public
      * @return SpeedUp_CacheManager
      */
-    public static function get_instance() {
+    public static function get_instance() 
+    {
         if ( null === self::$instance ) {
             self::$instance = new self();
         }
@@ -39,7 +40,7 @@ class SpeedUp_CacheManager {
      */
     private function __construct()
     {
-        
+     
     }
     
     /**
@@ -97,7 +98,8 @@ class SpeedUp_CacheManager {
      * @access public
      * @return void
      */
-    public function serve_file_cache() {
+    public function serve_file_cache() 
+    {
         
         // Check if request is cacheable
         if ( !$this->cacheable() ) {
@@ -128,7 +130,8 @@ class SpeedUp_CacheManager {
      * @access private
      * @return boolean
      */
-    private function cacheable(){
+    private function cacheable()
+    {
         
         global $post;
         
@@ -244,7 +247,8 @@ class SpeedUp_CacheManager {
      * @access private
      * @return boolean
      */
-    private function has_cookie(){
+    private function has_cookie()
+    {
         // Don't cache if user has cookie.
         if ( ! empty( $_COOKIE ) ) {
             
@@ -268,7 +272,8 @@ class SpeedUp_CacheManager {
      * @access private
      * @return string
      */
-    private function sendHeaderMiss($reason){
+    private function sendHeaderMiss($reason)
+    {
         if( !headers_sent() ){
             header('x-supc-miss: ' . $reason );
         }

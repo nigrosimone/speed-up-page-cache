@@ -6,6 +6,8 @@ $speedUpcacheManagerFile = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'plugins' . DI
 if( file_exists( $speedUpcacheManagerFile ) ){
     require_once $speedUpcacheManagerFile;
     
+    define('SUPC_DROPIN', true);
+    
     $speedUpcacheManagerObject = SpeedUp_CacheManager::get_instance();
     
     $speedUpcacheManagerObject->serve_file_cache();

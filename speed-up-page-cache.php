@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -13,14 +13,15 @@
 if (! defined('ABSPATH'))
     exit();
 
+require_once 'include/admin-manager.php';
 require_once 'include/cache-utils.php';
+require_once 'include/htaccess-utils.php';
+require_once 'include/wpconfig-utils.php';
+require_once 'include/dropin-utils.php';
 
 class SpeedUp_PageCache
 {
     const PLUGIN_NAME = 'Speed Up - Page Cache';
-
-    private static $HTACCESS_SECTION_START = null;
-    private static $HTACCESS_SECTION_END   = null;
 
     /**
      * Instance of the object.
@@ -56,9 +57,6 @@ class SpeedUp_PageCache
      */
     private function __construct()
     {
-        self::$HTACCESS_SECTION_START = '# BEGIN '.self::PLUGIN_NAME;
-        self::$HTACCESS_SECTION_END   = '# END '.self::PLUGIN_NAME;
-        
         add_action('deactivate_' . plugin_basename(__FILE__), array($this, 'deactivate'));
         add_action('activate_' . plugin_basename(__FILE__), array($this, 'activate'));
         
@@ -125,16 +123,11 @@ class SpeedUp_PageCache
      *
      * @since  1.0.0
      * @access public
-     * @return void
+     * @return boolean
      */
-    public function purge_cache(){
-        $cache_dir = SpeedUp_CacheUtils::get_cache_dir();
-        
-        $paths = SpeedUp_CacheUtils::rglob($cache_dir . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
-        
-        foreach ($paths as $path){
-            @unlink($path);
-        }
+    public function purge_cache()
+    {
+        return SpeedUp_CacheUtils::purge_cache();
     }
     
     /**
@@ -143,42 +136,11 @@ class SpeedUp_PageCache
      * @since  1.0.0
      * @access public
      * @param  int $post_id Post id.
-     * @return void
+     * @return boolean
      */
     public function on_post_change( $post_id ) 
     {
-        $post = get_post( $post_id );
-        
-        // if attachment changed - parent post has to be flushed
-        // since there are usually attachments content like title
-        // on the page (gallery)
-        if ( $post->post_type == 'attachment' ) {
-            $post_id = $post->post_parent;
-            $post = get_post( $post_id );
-        }
-            
-        if( !in_array( $post->post_type, array( 'revision', 'attachment' ) ) &&
-             in_array( $post->post_status, array( 'publish' ) ) ){
-            
-            $urls = array();
-            
-            $urls[] = get_permalink( $post_id );
-            
-            $taxonomies = get_post_taxonomies( $post_id );
-            $terms = wp_get_post_terms( $post_id, $taxonomies );
-            foreach ( $terms as $term ) {
-                $urls[] = get_term_link( $term, $term->taxonomy );
-            }
-            
-            $urls[] = get_author_posts_url( $post->post_author );
-            
-            $cache_dir = SpeedUp_CacheUtils::get_cache_dir();
-            
-            foreach ($urls as $url){ 
-                $path = SpeedUp_CacheUtils::url_to_path($url);
-                @unlink($cache_dir . $path . '_index.html');
-            }
-        } 
+        return SpeedUp_CacheUtils::purge_cache_post($post_id);
     }
     
     /**
@@ -187,7 +149,8 @@ class SpeedUp_PageCache
      * @since 1.0.0
      * @access public
      */
-    public function schedule_events() {
+    public function schedule_events() 
+    {
         if (!wp_next_scheduled ( 'supc_purge_cache' )) {
             wp_schedule_event( time(), 'daily', 'supc_purge_cache' );
         }
@@ -198,9 +161,10 @@ class SpeedUp_PageCache
      *
      * @since 1.0.0
      * @access public
+     * @return boolean
      */
     public function on_change() {
-        $this->purge_cache();
+        return $this->purge_cache();
     }
     
     /**
@@ -212,12 +176,7 @@ class SpeedUp_PageCache
      */
     private function dropin_add()
     {
-        if( $this->dropin_remove() ){
-            $source = __DIR__ . DIRECTORY_SEPARATOR . 'dropin' . DIRECTORY_SEPARATOR . 'advanced-cache.php';
-            $dest = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'advanced-cache.php';
-            return copy($source, $dest);
-        }
-        return false;
+        return SpeedUp_DropinUtils::add();
     }
     
     /**
@@ -229,11 +188,7 @@ class SpeedUp_PageCache
      */
     private function dropin_remove()
     {
-        $filename = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'advanced-cache.php';
-        if( file_exists($filename) ){
-            return @unlink(WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'advanced-cache.php');
-        }
-        return true;
+        return SpeedUp_DropinUtils::remove();
     }
     
     
@@ -244,8 +199,9 @@ class SpeedUp_PageCache
      * @access private
      * @return boolean
      */
-    private function htaccess_add_rules() {
-        return $this->toggle_rulse_from_htaccess_content(true);
+    private function htaccess_add_rules() 
+    {
+        return SpeedUp_HtaccessUtils::toggle_rulse_from_content(true);
     }
     
     /**
@@ -255,114 +211,11 @@ class SpeedUp_PageCache
      * @access private
      * @return boolean
      */
-    private function htaccess_remove_rules() {
-        return $this->toggle_rulse_from_htaccess_content(false);
+    private function htaccess_remove_rules() 
+    {
+        return SpeedUp_HtaccessUtils::toggle_rulse_from_content(false);
     }
     
-    /**
-     * Remove the htaccess rule and add if $add.
-     *
-     * @since  1.0.0
-     * @access private
-     * @param  boolean $add Add the ruel.
-     * @return boolean
-     */
-    private function toggle_rulse_from_htaccess_content($add) {
-        
-        if( empty(self::$HTACCESS_SECTION_START) || empty(self::$HTACCESS_SECTION_END) ){
-            return false;
-        }
-        
-        $htaccess_path = $this->htaccess_path();
-        
-        // Couldn't find htaccess.
-        if ( ! $htaccess_path ) {
-            return false;
-        }
-        
-        $config_file_string = @file_get_contents( $htaccess_path );
-        
-        // htaccess file is empty. Maybe couldn't read it?
-        if ( empty( $config_file_string ) ) {
-            return false;
-        }
-        
-        $old_lines = explode( PHP_EOL, $config_file_string );
-        
-        // remove my rules
-        if( !empty($old_lines) && is_array($old_lines) ){
-            
-            $speed_up_directives = null;
-            
-            // loop over the htaccess lines
-            for($i = 0, $e = count($old_lines); $i < $e; $i++) {
-                
-                $line = $old_lines[$i];
-                
-                // when we find the first line of Speed Up directives
-                if( strpos($line, self::$HTACCESS_SECTION_START) === 0 ) {
-                    $speed_up_directives = true;
-                }
-                
-                // remove the line if is in a Speed Up section
-                if( $speed_up_directives === true ){
-                    unset($old_lines[$i]);
-                }
-                
-                // when we find the last line of Speed Up directives
-                if( strpos($line, self::$HTACCESS_SECTION_END) === 0 ) {
-                    $speed_up_directives = false;
-                    break; // end of operation, exit for
-                }
-            }
-            
-            if( !is_null($speed_up_directives) ){
-                // broken htaccess!
-                if( $speed_up_directives === true ){
-                    return false;
-                }
-            }
-            
-            // reindex
-            $new_lines = array_values($old_lines);
-            
-            // add the new line at the beginning
-            if( $add ){
-                if( !isset($_SERVER['DOCUMENT_ROOT']) ){
-                    return false;
-                }
-                
-                $root_dir  = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-                $cache_dir = str_replace('\\', '/', SpeedUp_CacheUtils::get_cache_dir());
-                
-                if( empty($root_dir) || empty($cache_dir) ){
-                    return false;
-                }
-                
-                $cache_path = str_replace($root_dir, '', $cache_dir);
-                
-                $my_lines  = array();
-                $my_lines[] = self::$HTACCESS_SECTION_START;
-                $my_lines[] = '<IfModule mod_rewrite.c>';
-                $my_lines[] = 'RewriteEngine On';
-                $my_lines[] = 'RewriteBase /';
-                $my_lines[] = 'RewriteCond %{REQUEST_METHOD} =GET';
-                $my_lines[] = 'RewriteCond %{QUERY_STRING} =""';
-                $my_lines[] = 'RewriteCond %{HTTP_COOKIE} !(comment_author|wp\-postpass|wordpress_logged_in|wptouch_switch_toggle) [NC]';
-                $my_lines[] = 'RewriteCond %{REQUEST_URI} \/$';
-                $my_lines[] = 'RewriteCond %{HTTP_HOST} ([^:]+)';
-                $my_lines[] = 'RewriteCond %{DOCUMENT_ROOT}'. $cache_path .'%1/%{REQUEST_URI}/_index.html -f';
-                $my_lines[] = 'RewriteRule ^(.*) "'. $cache_path .'%1/%{REQUEST_URI}/_index.html" [L]';
-                $my_lines[] = '</IfModule>';
-                $my_lines[] = self::$HTACCESS_SECTION_END;
-                $new_lines = array_merge($my_lines, $old_lines);
-            }
-            
-            return @file_put_contents( $htaccess_path, implode( PHP_EOL, $new_lines ) );
-        }
-        
-        return false;
-    }
     
     /**
      * Remove WP_CACHE from wp-config.php
@@ -373,7 +226,7 @@ class SpeedUp_PageCache
      */
     private function wp_config_remove_wp_cache()
     {
-        return $this->toggle_wp_cache_from_wp_config_content(false);
+        return SpeedUp_WpconfigUtils::toggle_wp_cache_from_content(false);
     }
 
     /**
@@ -386,110 +239,10 @@ class SpeedUp_PageCache
      */
     private function wp_config_add_wp_cache()
     {
-        return $this->toggle_wp_cache_from_wp_config_content(true);
-    }
-
-    /**
-	 * Toggle WP_CACHE on or off in wp-config.php
-	 *
-	 * @param  boolean $status Status of cache.
-	 * @access private
-	 * @since  1.0.0
-	 * @return boolean
-	 */
-    private function toggle_wp_cache_from_wp_config_content( $status ) {
-
-		if ( defined( 'WP_CACHE' ) && WP_CACHE === $status ) {
-			return true;
-		}
-		
-		$config_path = $this->wp_config_path();
-
-		// Couldn't find wp-config.php.
-		if ( ! $config_path ) {
-			return false;
-		}
-
-		$config_file_string = @file_get_contents( $config_path );
-
-		// Config file is empty. Maybe couldn't read it?
-		if ( empty( $config_file_string ) ) {
-			return false;
-		}
-
-		$config_file = explode( PHP_EOL, $config_file_string );
-
-		// remove all WP_CACHE constant line
-		$match = null;
-		foreach ( $config_file as $key => $line ) {
-			if ( ! preg_match( '/^\s*define\(\s*(\'|")([A-Z_]+)(\'|")(.*)/', $line, $match ) ) {
-				continue;
-			}
-
-			if ( 'WP_CACHE' === $match[2] ) {
-				unset( $config_file[ $key ] );
-			}
-		}
-
-		$status_string = ( $status ) ? 'true' : 'false';
-
-		array_shift( $config_file );
-		array_unshift( $config_file, '<?php', 'define( "WP_CACHE", '. $status_string .' ); // ' . self::PLUGIN_NAME );
-
-		if ( ! @file_put_contents( $config_path, implode( PHP_EOL, $config_file ) ) ) {
-			return false;
-		}
-		
-		if (function_exists('opcache_reset')) {
-		    opcache_reset();
-		}
-
-		return true;
-	}
-
-    /**
-     * Returns wp-config.php path
-     *
-     * @since 1.0.0
-     * @access private
-     * @return string
-     */
-    private function wp_config_path()
-    {
-        $wp_config = 'wp' . '-' . 'config'. '.' . 'php';
-        $search = array(
-            ABSPATH . $wp_config,
-            dirname( ABSPATH ) . DIRECTORY_SEPARATOR . $wp_config
-        );
-        foreach ( $search as $path ) {
-            if ( file_exists( $path ) ) {
-                return $path;
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Returns .htaccess path
-     *
-     * @since 1.0.0
-     * @access private
-     * @return string
-     */
-    private function htaccess_path()
-    {
-        $search = array(
-            ABSPATH . '.htaccess',
-            dirname( ABSPATH ) . DIRECTORY_SEPARATOR . '.htaccess'
-        );
-        foreach ( $search as $path ) {
-            if ( file_exists( $path ) ) {
-                return $path;
-            }
-        }
-        return null;
+        return SpeedUp_WpconfigUtils::toggle_wp_cache_from_content(true);
     }
 }
 
 // Init
 SpeedUp_PageCache::get_instance();
+SpeedUp_AdminManager::get_instance();
