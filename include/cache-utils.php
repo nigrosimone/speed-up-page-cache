@@ -74,6 +74,30 @@ class SpeedUp_CacheUtils {
     }
     
     /**
+     * Get path by URL
+     *
+     * @since  1.0.4
+     * @access private
+     * @param  string $path
+     * @return string
+     */
+    public static function path_to_url($path)
+    {
+        $cache_dir = self::get_cache_dir();
+        $path = str_replace($cache_dir, '', $path);
+        $path = str_replace('_index.html', '', $path);
+        $path = str_replace('\\', '/', $path);
+        
+        if ( (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 ){
+            $path = 'https://' . $path;
+        } else {
+            $path = 'http://' . $path;
+        }
+        
+        return $path;
+    }
+    
+    /**
      * Recursive glob.
      *
      * @since  1.0.0
@@ -145,15 +169,28 @@ class SpeedUp_CacheUtils {
      */
     public static function purge_cache()
     {
-        $cache_dir = self::get_cache_dir();
-        
-        $paths = self::rglob($cache_dir . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
+        $paths = self::cached_paths();
         
         foreach ($paths as $path){
             @unlink($path);
         }
         
         return true;
+    }
+    
+    /**
+     * Return all cached paths.
+     *
+     * @since  1.0.4
+     * @static
+     * @access public
+     * @return boolean
+     */
+    public static function cached_paths()
+    {
+        $cache_dir = self::get_cache_dir();
+        
+        return self::rglob($cache_dir . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
     }
     
     /**
@@ -223,7 +260,8 @@ class SpeedUp_CacheUtils {
         $path = self::url_to_path($url);
         
         if( !empty($path) ){
-            return @unlink($cache_dir . $path . '_index.html');
+            @unlink($cache_dir . $path . '_index.html');
+            return true;
         }
         
         return false;

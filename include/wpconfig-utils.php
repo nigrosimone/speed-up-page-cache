@@ -36,8 +36,8 @@ class SpeedUp_WpconfigUtils {
      * @access public
      * @return boolean
      */
-    public static function toggle_wp_cache_from_content( $status ) {
-        
+    public static function toggle_wp_cache_from_content( $status ) 
+    {
         if ( defined( 'WP_CACHE' ) && WP_CACHE === $status ) {
             return true;
         }

@@ -54,7 +54,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function init(){
+    public function init()
+    {
         if( is_admin() ){
             $this->process_action();
             $this->process_notice();
@@ -67,7 +68,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function wp_before_admin_bar_render(){
+    public function wp_before_admin_bar_render()
+    {
         global $wp_admin_bar;
         
         $wp_admin_bar->add_menu( array(
@@ -84,7 +86,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function admin_bar_menu(){
+    public function admin_bar_menu()
+    {
         global $wp_admin_bar;
         
         if ( current_user_can( 'manage_options' ) ) {
@@ -132,7 +135,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function admin_menu(){
+    public function admin_menu()
+    {
         add_submenu_page( 'options-general.php', 'Speed Up - Page Cache', 'Speed Up - Page Cache', 'manage_options', 'speed-up-page-cache', array( $this, 'render_admin_purge_page' ));
     }
     
@@ -216,20 +220,60 @@ class SpeedUp_AdminManager {
     public function render_admin_purge_page()
     {
         $html = '';
-            
-        $html .= '<ul>';
-        if( defined('SUPC_DROPIN') && SUPC_DROPIN ){
-            $html .= '<li>DROPIN: OK</li>';
-        } else {
-            $html .= '<li>DROPIN: not installed</li>';
+        
+        $html .= '<div class="wrap">';
+        $html .= '<h1>Speed Up - Page Cache</h1>';
+         
+        if( !defined('SUPC_DROPIN') || !SUPC_DROPIN ){
+            $html .= '<div class="notice notice-error inline"><p>';
+            $html .= 'The dropin is not installed. Please manually copy the <code>/wp-content/plugins/speed-up-page-cache/dropin/advanced-cache.php</code> file into the <code>/wp-content/</code> directory';
+            $html .= '</p></div>';
         }
-            
-        if( defined('WP_CACHE') && WP_CACHE ){
-            $html .= 'WP_CACHE: OK';
-        } else {
-            $html .= 'WP_CACHE: not setted to true';
+        if( !defined('WP_CACHE') || !WP_CACHE ){
+            $html .= '<div class="notice notice-error inline"><p>';
+            $html .= '<code>WP_CACHE</code> is not enabled. Please manually set the <code>define(\'WP_CACHE\', true);</code> costant into the <code>wp-config.php</code>';
+            $html .= '</p></div>';
         }
-        $html .= '</ul>';
+        
+        $html .= '<section class="pattern" id="formelementsinput">';
+        $html .= '<h2>Purge method</h2>';
+        $html .= '<form method="post" action="">';
+        $html .= wp_nonce_field( 'supc' );
+        $html .= '<input type="hidden" name="supc_action" value="supc_flush_all" />';
+        $html .= '<input type="hidden" name="supc_redirect" value="'. esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) ) .'" />';
+        $html .= '<input style="border: none; box-shadow: none" type="text" name="" value="PURGE ALL THE CACHES" class="regular-text" readonly="readonly">';
+        $html .= '<input cass="button-secondary" type="submit" value="Purge All Caches">';
+        $html .= '</form>';
+        $html .= '<br />';
+        $html .= '<form method="post" action="">';
+        $html .= wp_nonce_field( 'supc' );
+        $html .= '<input type="hidden" name="supc_action" value="supc_flush_post" />';
+        $html .= '<input type="hidden" name="supc_redirect" value="'. esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) ) .'" />';
+        $html .= '<input type="text" name="post_id" value="" placeholder="POST ID" class="regular-text">';
+        $html .= '<input cass="button-secondary" type="submit" value="Purge Post Cache">';
+        $html .= '</form>';
+        $html .= '<br />';
+        $html .= '<form method="post" action="">';
+        $html .= wp_nonce_field( 'supc' );
+        $html .= '<input type="hidden" name="supc_action" value="supc_flush_url" />';
+        $html .= '<input type="hidden" name="supc_redirect" value="'. esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) ) .'" />';
+        $html .= '<input type="text" name="url" value="" placeholder="PAGE URL" class="regular-text">';
+        $html .= '<input cass="button-secondary" type="submit" value="Purge URL Cache">';
+        $html .= '</form>';
+        $html .= '</section>';
+        
+        $html .= '<section class="pattern" id="formelementsinput">';
+        $html .= '<h2>URL Cached</h2>';
+        $html .= '<textarea id="" name="" cols="100" rows="10" readonly="readonly">';
+        $cached_paths = SpeedUp_CacheUtils::cached_paths();
+        foreach ($cached_paths as $cached_path){
+            $html .= SpeedUp_CacheUtils::path_to_url($cached_path) . "\r\n";
+        }
+        $html .= '</textarea>';
+        $html .= '</section>';
+        
+        
+        $html .= '</div>'; // end wrap
             
             
         echo $html;
@@ -241,7 +285,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function admin_notices_flush_success(){
+    public function admin_notices_flush_success()
+    {
         $html = '';
         $html .= '<div class="notice notice-success is-dismissible">';
         $html .= '<p>'. __( 'Cache flushed!', 'speed-up-page-cache' ) .'</p>';
@@ -255,7 +300,8 @@ class SpeedUp_AdminManager {
      * @since 1.0.3
      * @access public
      */
-    public function admin_notices_flush_failed(){
+    public function admin_notices_flush_failed()
+    {
         $html = '';
         $html .= '<div class="notice notice-error is-dismissible">';
         $html .= '<p>'. __( 'Cache flush failed!', 'speed-up-page-cache' ) .'</p>';

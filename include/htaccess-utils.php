@@ -40,7 +40,6 @@ class SpeedUp_HtaccessUtils {
      */
     public static function toggle_rulse_from_content($add) 
     {
-        
         $htaccess_path = self::get_path();
         
         // Couldn't find htaccess.

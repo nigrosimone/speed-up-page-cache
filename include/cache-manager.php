@@ -100,7 +100,6 @@ class SpeedUp_CacheManager {
      */
     public function serve_file_cache() 
     {
-        
         // Check if request is cacheable
         if ( !$this->cacheable() ) {
             return;
@@ -132,7 +131,6 @@ class SpeedUp_CacheManager {
      */
     private function cacheable()
     {
-        
         global $post;
         
         // Cache only HTTP GET request
