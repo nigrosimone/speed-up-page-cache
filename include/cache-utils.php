@@ -41,6 +41,7 @@ class SpeedUp_CacheUtils {
      * Get cache directory
      *
      * @since  1.0.0
+     * @static
      * @access public
      * @return string
      */
@@ -53,6 +54,7 @@ class SpeedUp_CacheUtils {
      * Get URL path for caching
      *
      * @since  1.0.0
+     * @static
      * @access private
      * @param  string $url
      * @return string
@@ -77,6 +79,7 @@ class SpeedUp_CacheUtils {
      * Get path by URL
      *
      * @since  1.0.4
+     * @static
      * @access private
      * @param  string $path
      * @return string
@@ -88,13 +91,26 @@ class SpeedUp_CacheUtils {
         $path = str_replace('_index.html', '', $path);
         $path = str_replace('\\', '/', $path);
         
-        if ( (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 ){
+        if ( self::is_https() ){
             $path = 'https://' . $path;
         } else {
             $path = 'http://' . $path;
         }
         
         return $path;
+    }
+    
+    /**
+     * Return true if https is enabled
+     *
+     * @since  1.0.5
+     * @static
+     * @access private
+     * @return boolean
+     */
+    public static function is_https()
+    {
+        return ( (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] == 443) );
     }
     
     /**
@@ -171,11 +187,19 @@ class SpeedUp_CacheUtils {
     {
         $paths = self::cached_paths();
         
-        foreach ($paths as $path){
-            @unlink($path);
+        if( empty($paths) ){
+            return true;
         }
         
-        return true;
+        $result = true;
+        
+        foreach ($paths as $path){
+            if( !@unlink($path) ){
+                $result = false;
+            }
+        }
+        
+        return $result;
     }
     
     /**
@@ -184,7 +208,7 @@ class SpeedUp_CacheUtils {
      * @since  1.0.4
      * @static
      * @access public
-     * @return boolean
+     * @return array
      */
     public static function cached_paths()
     {
@@ -192,6 +216,26 @@ class SpeedUp_CacheUtils {
         
         return self::rglob($cache_dir . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
     }
+    
+    /**
+     * Return all cached URLs.
+     *
+     * @since  1.0.5
+     * @static
+     * @access public
+     * @return array
+     */
+    public static function cached_urls()
+    {
+        $cached_paths = self::cached_paths();
+        $cached_urls = array();
+        foreach ($cached_paths as $cached_path){
+            array_push($cached_urls, self::path_to_url($cached_path));
+        }
+        return $cached_urls;
+    }
+    
+    
     
     /**
      * Automatically purge all page cache on post changes.
@@ -232,12 +276,15 @@ class SpeedUp_CacheUtils {
             }
                 
             $urls[] = get_author_posts_url( $post->post_author );
-               
+            
+            $result = true;
             foreach ($urls as $url){
-                self::purge_cache_url($url);
+                if( !self::purge_cache_url($url) ){
+                    $result = false;
+                }
             }
                 
-            return true;
+            return $result;
         }
     }
     
@@ -260,8 +307,12 @@ class SpeedUp_CacheUtils {
         $path = self::url_to_path($url);
         
         if( !empty($path) ){
-            @unlink($cache_dir . $path . '_index.html');
-            return true;
+            $filename = $cache_dir . $path . '_index.html';
+            if( file_exists($filename) ){
+                return @unlink($filename);
+            } else {
+                return true;
+            }
         }
         
         return false;

@@ -1,5 +1,6 @@
 <?php
 require_once 'cache-utils.php';
+require_once 'config-manager.php';
 
 if ( !defined('ABSPATH') ) exit;
 
@@ -14,6 +15,15 @@ class SpeedUp_CacheManager {
      * @var null|SpeedUp_CacheManager
      */
     public static $instance = null;
+    
+    /**
+     * Instance of SpeedUp_ConfigManager.
+     *
+     * @since  1.0.5
+     * @access private
+     * @var null|SpeedUp_ConfigManager
+     */
+    private $config = null;
     
     
     /**
@@ -40,7 +50,7 @@ class SpeedUp_CacheManager {
      */
     private function __construct()
     {
-     
+        $this->config = SpeedUp_ConfigManager::get_instance();
     }
     
     /**
@@ -232,6 +242,14 @@ class SpeedUp_CacheManager {
         // check if SUPC_CACHEABLE is false
         if( defined( 'SUPC_CACHEABLE' ) && SUPC_CACHEABLE === false ){
             $this->sendHeaderMiss('SUPC_CACHEABLE costant is false');
+            return false;
+        }
+        
+        // check if current url is in cache_exception_urls
+        $cache_exception_urls = $this->config->get('cache_exception_urls');
+        $url = SpeedUp_CacheUtils::get_url();
+        if( $url && is_array($cache_exception_urls) && in_array($url, $cache_exception_urls) ){
+            $this->sendHeaderMiss('url is in cache_exception_urls');
             return false;
         }
         

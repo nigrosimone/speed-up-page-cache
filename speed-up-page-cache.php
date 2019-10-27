@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -14,10 +14,12 @@ if (! defined('ABSPATH'))
     exit();
 
 require_once 'include/admin-manager.php';
+require_once 'include/admin-notice.php';
 require_once 'include/cache-utils.php';
 require_once 'include/htaccess-utils.php';
 require_once 'include/wpconfig-utils.php';
 require_once 'include/dropin-utils.php';
+require_once 'include/config-manager.php';
 
 class SpeedUp_PageCache
 {
@@ -32,6 +34,15 @@ class SpeedUp_PageCache
      * @var null|SpeedUp_PageCache
      */
     public static $instance = null;
+    
+    /**
+     * Instance of SpeedUp_ConfigManager.
+     *
+     * @since 1.0.5
+     * @access private
+     * @var null|SpeedUp_ConfigManager
+     */
+    private $config = null;
 
     /**
      * Access the single instance of this class.
@@ -57,6 +68,8 @@ class SpeedUp_PageCache
      */
     private function __construct()
     {
+        $this->config = SpeedUp_ConfigManager::get_instance();
+        
         add_action('deactivate_' . plugin_basename(__FILE__), array($this, 'deactivate'));
         add_action('activate_' . plugin_basename(__FILE__), array($this, 'activate'));
         
@@ -95,6 +108,9 @@ class SpeedUp_PageCache
         
             // add htaccess rule
             $this->htaccess_add_rules();
+            
+            // create the config file
+            $this->config_create();
         }
     }
 
@@ -115,6 +131,9 @@ class SpeedUp_PageCache
                 
             // remove htaccess rule
             $this->htaccess_remove_rules();
+            
+            // remove the config file
+            $this->config_remove();
         }
     }
     
@@ -152,7 +171,7 @@ class SpeedUp_PageCache
     public function schedule_events() 
     {
         if (!wp_next_scheduled ( 'supc_purge_cache' )) {
-            wp_schedule_event( time(), 'daily', 'supc_purge_cache' );
+            wp_schedule_event( time(), $this->config->get('cron_recurrence', 'daily'), 'supc_purge_cache' );
         }
     }
     
@@ -217,7 +236,6 @@ class SpeedUp_PageCache
         return SpeedUp_HtaccessUtils::toggle_rulse_from_content(false);
     }
     
-    
     /**
      * Remove WP_CACHE from wp-config.php
      *
@@ -235,12 +253,35 @@ class SpeedUp_PageCache
      *
      * @since 1.0.0
      * @access private
-     * @param string $config_data wp-config.php content
      * @return boolean
      */
     private function wp_config_add_wp_cache()
     {
         return SpeedUp_WpconfigUtils::toggle_wp_cache_from_content(true);
+    }
+    
+    /**
+     * Remove config file
+     *
+     * @since 1.0.5
+     * @access private
+     * @return boolean
+     */
+    private function config_remove()
+    {
+        return SpeedUp_ConfigManager::get_instance()->delete();
+    }
+    
+    /**
+     * Create config file
+     *
+     * @since 1.0.5
+     * @access private
+     * @return boolean
+     */
+    private function config_create()
+    {
+        return SpeedUp_ConfigManager::get_instance()->create();
     }
 }
 
