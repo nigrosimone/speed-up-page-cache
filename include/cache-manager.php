@@ -245,11 +245,35 @@ class SpeedUp_CacheManager {
             return false;
         }
         
+        // check if wp-login.php page
+        if( strpos($_SERVER["SCRIPT_NAME"], 'wp-login.php') !== false ){
+            $this->sendHeaderMiss('wp-login.php not cacheable');
+            return false;
+        }
+        
         // check if current url is in cache_exception_urls
         $cache_exception_urls = $this->config->get('cache_exception_urls');
         $url = SpeedUp_CacheUtils::get_url();
         if( $url && is_array($cache_exception_urls) && in_array($url, $cache_exception_urls) ){
             $this->sendHeaderMiss('url is in cache_exception_urls');
+            return false;
+        }
+        
+        // check if 404
+        if( function_exists( 'is_404' ) && is_404() ){
+            $this->sendHeaderMiss('404 page not found');
+            return false;
+        }
+        
+        // check if rest request
+        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+            $this->sendHeaderMiss('rest request');
+            return false;
+        }
+        
+        // check if feed
+        if( function_exists( 'is_feed' ) && is_feed() ){
+            $this->sendHeaderMiss('feed request');
             return false;
         }
         

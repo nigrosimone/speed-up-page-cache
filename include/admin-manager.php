@@ -362,8 +362,9 @@ class SpeedUp_AdminManager {
             $html .= '<option '. ($cron_recurrence === 'hourly' ? 'selected' : '') .'>hourly</option>';
             $html .= '<option '. ($cron_recurrence === 'daily' ? 'selected' : '') .'>daily</option>';
             $html .= '<option '. ($cron_recurrence === 'twicedaily' ? 'selected' : '') .'>twicedaily</option>';
+            $html .= '<option '. ($cron_recurrence === 'weekly' ? 'selected' : '') .'>weekly</option>';
             $html .= '</select><br />';
-            $html .= '<span class="description">Choose the schedule recurrence for automatic chache purge.</span>';
+            $html .= '<span class="description">Choose the schedule recurrence for automatic cache purge.</span>';
             $html .= '<br /><br />';
             
             $cache_exception_urls = $this->config->get('cache_exception_urls');

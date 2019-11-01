@@ -115,6 +115,10 @@ class SpeedUp_ConfigManager {
                 opcache_reset();
             }
             
+            $this->config = $config;
+            
+            do_action('supc_save_config', $config);
+            
             return true;
         }
         

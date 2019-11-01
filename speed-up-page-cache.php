@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -86,9 +86,11 @@ class SpeedUp_PageCache
         // cron job
         add_action( 'supc_purge_cache', array( $this, 'purge_cache' ) );
         add_action( 'init', array( $this, 'schedule_events' ) );
+        add_filter( 'cron_schedules', array($this, 'cron_schedules') );
   
         // others action
         add_action( 'supc_purge_cache_post', array( $this, 'on_post_change' ) );
+        add_action( 'supc_save_config', array( $this, 'supc_save_config' ) );
     }
 
     /**
@@ -163,6 +165,18 @@ class SpeedUp_PageCache
     }
     
     /**
+     * supc_save_config hook.
+     *
+     * @since  1.0.6
+     * @access public
+     */
+    public function supc_save_config()
+    {
+        $this->unschedule_events();
+        $this->schedule_events();
+    }
+    
+    /**
      * Setup cron jobs.
      *
      * @since 1.0.0
@@ -173,6 +187,35 @@ class SpeedUp_PageCache
         if (!wp_next_scheduled ( 'supc_purge_cache' )) {
             wp_schedule_event( time(), $this->config->get('cron_recurrence', 'daily'), 'supc_purge_cache' );
         }
+    }
+    
+    /**
+     * Unschedule events
+     *
+     * @since 1.0.6
+     * @access public
+     */
+    public function unschedule_events() 
+    {
+        $timestamp = wp_next_scheduled( 'supc_purge_cache' );
+        wp_unschedule_event( $timestamp, 'supc_purge_cache' );
+    }
+    
+    /**
+     * cron_schedules filter.
+     *
+     * @since 1.0.6
+     * @access public
+     */
+    public function cron_schedules($schedules)
+    {
+        if( !isset($schedules['weekly']) ){
+            $schedules['weekly'] = array(
+                'interval' => DAY_IN_SECONDS * 7,
+                'display' => __('Once week')
+            );
+        }
+        return $schedules;
     }
     
     /**
