@@ -4,7 +4,7 @@ Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
 Tested up to: 5.2
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,10 @@ Improves the SEO and user experience of your site by increasing website performa
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.7 =
+* Small fix
+* Add monthly cron scheduler option
 
 = 1.0.6 =
 * Exclude wp-login.php from cache

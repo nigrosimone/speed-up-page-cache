@@ -141,8 +141,15 @@ class SpeedUp_AdminManager {
             $wp_admin_bar->add_menu( array(
                 'id' => 'supc_admin',
                 'parent' => 'supc_admin_page_menu',
-                'title' => 'Option',
+                'title' => 'Settings',
                 'href' => network_admin_url('options-general.php?page=speed-up-page-cache' )
+            ));
+            
+            $wp_admin_bar->add_menu( array(
+                'id' => 'supc_donate',
+                'parent' => 'supc_admin_page_menu',
+                'title' => '&hearts; Donate',
+                'href' => 'http://paypal.me/snwp'
             ));
         }
     }
@@ -289,7 +296,8 @@ class SpeedUp_AdminManager {
         
         $html .= '<div class="wrap">';
         $html .= '<h1>Speed Up - Page Cache</h1>';
-         
+        
+        // check
         if( !defined('SUPC_DROPIN') || !SUPC_DROPIN ){
             $html .= SpeedUp_AdminNotice::error_notice(SpeedUp_AdminNotice::MESSAGE_ERROR_DROPIN, false)->render();
         }
@@ -300,9 +308,18 @@ class SpeedUp_AdminManager {
             $html .= SpeedUp_AdminNotice::error_notice(SpeedUp_AdminNotice::MESSAGE_ERROR_CONFIG, false)->render();
         }
         
+        $html .= '<div id="poststuff">';
+        $html .= '<div id="post-body" class="metabox-holder columns-2">';
+        
+        // main
+        $html .= '<div id="post-body-content">';
+        $html .= '<div class="meta-box-sortables ui-sortable">';
+        
         if ( current_user_can( 'manage_options' ) ) {
+            $html .= '<div class="postbox">';
+            $html .= '<h2><span>Purge method</span></h2>';
+            $html .= '<div class="inside">';
             $html .= '<section class="pattern" id="formelementsinput">';
-            $html .= '<h2>Purge method</h2>';
             $html .= '<form method="post" action="">';
             $html .= wp_nonce_field( 'supc' );
             $html .= '<input type="hidden" name="supc_action" value="supc_flush_all" />';
@@ -347,9 +364,13 @@ class SpeedUp_AdminManager {
             }
             
             $html .= '</section><br />';
+            $html .= '</div>'; // end inside
+            $html .= '</div>'; // end postbox
        
+            $html .= '<div class="postbox">';
+            $html .= '<h2><span>Settings</span></h2>';
+            $html .= '<div class="inside">';
             $html .= '<section class="pattern" id="formelementsinput">';
-            $html .= '<h2>Config</h2>';
             $html .= '<form method="post" action="">';
             $html .= wp_nonce_field( 'supc' );
             $html .= '<input type="hidden" name="supc_config" value="1" />';
@@ -363,6 +384,7 @@ class SpeedUp_AdminManager {
             $html .= '<option '. ($cron_recurrence === 'daily' ? 'selected' : '') .'>daily</option>';
             $html .= '<option '. ($cron_recurrence === 'twicedaily' ? 'selected' : '') .'>twicedaily</option>';
             $html .= '<option '. ($cron_recurrence === 'weekly' ? 'selected' : '') .'>weekly</option>';
+            $html .= '<option '. ($cron_recurrence === 'montly' ? 'selected' : '') .'>montly</option>';
             $html .= '</select><br />';
             $html .= '<span class="description">Choose the schedule recurrence for automatic cache purge.</span>';
             $html .= '<br /><br />';
@@ -380,8 +402,30 @@ class SpeedUp_AdminManager {
             $html .= '<br /><input cass="button-primary" type="submit" value="Save"><br />';
             $html .= '</form>';
             $html .= '</section><br />';
+            $html .= '</div>'; // end inside
+            $html .= '</div>'; // end postbox
+        } else {
+            $html .= SpeedUp_AdminNotice::error_notice('You don\'t have permission to manage options', false)->render();
         }
+        $html .= '</div>'; // end post-body-content
+        $html .= '</div>'; // end meta-box-sortables
         
+        // sidebar
+        $html .= '<div id="postbox-container-1" class="postbox-container">';
+        $html .= '<div class="meta-box-sortables">';
+        $html .= '<div class="postbox">';
+        $html .= '<h2><span>Donation</span></h2>';
+        $html .= '<div class="inside">';
+        $html .= 'I spent my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not, feel free to use it without any obligations.';
+        $html .= '<br />&hearts; <a href="http://paypal.me/snwp" target="_blank">Donate</a>';
+        $html .= '</div>'; // end inside
+        $html .= '</div>'; // end postbox
+        $html .= '</div>'; // end post-body-content
+        $html .= '</div>'; // end meta-box-sortables
+        
+        
+        $html .= '</div>'; // end poststuff
+        $html .= '</div>'; // end post-body
         $html .= '</div>'; // end wrap
         
         echo $html;
@@ -398,7 +442,7 @@ class SpeedUp_AdminManager {
      {
         $url = SpeedUp_CacheUtils::get_request( 'supc_redirect' );
  
-        if ( $url == '' ) {
+        if ( empty($url) ) {
             if ( !empty( $_SERVER['HTTP_REFERER'] ) ) {
                 $url = $_SERVER['HTTP_REFERER'];
             } else {

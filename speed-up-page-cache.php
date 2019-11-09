@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -91,6 +91,9 @@ class SpeedUp_PageCache
         // others action
         add_action( 'supc_purge_cache_post', array( $this, 'on_post_change' ) );
         add_action( 'supc_save_config', array( $this, 'supc_save_config' ) );
+        
+        // filter
+        add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
     }
 
     /**
@@ -215,6 +218,12 @@ class SpeedUp_PageCache
                 'display' => __('Once week')
             );
         }
+        if( !isset($schedules['montly']) ){
+            $schedules['montly'] = array(
+                'interval' => DAY_IN_SECONDS * 30,
+                'display' => __('Once month')
+            );
+        }
         return $schedules;
     }
     
@@ -228,6 +237,24 @@ class SpeedUp_PageCache
     public function on_change() 
     {
         return $this->purge_cache();
+    }
+    
+    /**
+     * plugin_row_meta filter.
+     *
+     * @since 1.0.7
+     * @access public
+     * @param  array  $plugin_meta All met data to a plugin.
+	 * @param  string $plugin_file The main file of the plugin with the meta data.
+     * @return boolean
+     */
+    public function plugin_row_meta($plugin_meta, $plugin_file)
+    {
+        if ( plugin_basename( __FILE__ ) === $plugin_file ) {
+            $plugin_meta[] = '<a href="'. network_admin_url('options-general.php?page=speed-up-page-cache' ) . '">Settings</a>';
+            $plugin_meta[] = '&hearts; <a href="http://paypal.me/snwp" target="_blank">Donate</a>';
+        }
+        return $plugin_meta;
     }
     
     /**
@@ -312,7 +339,7 @@ class SpeedUp_PageCache
      */
     private function config_remove()
     {
-        return SpeedUp_ConfigManager::get_instance()->delete();
+        return $this->config->delete();
     }
     
     /**
@@ -324,7 +351,7 @@ class SpeedUp_PageCache
      */
     private function config_create()
     {
-        return SpeedUp_ConfigManager::get_instance()->create();
+        return $this->config->create();
     }
 }
 
