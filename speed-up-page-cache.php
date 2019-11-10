@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -164,7 +164,15 @@ class SpeedUp_PageCache
      */
     public function on_post_change( $post_id ) 
     {
-        return SpeedUp_CacheUtils::purge_cache_post($post_id);
+        static $_CACHE_ON_POST_CHANGE = array();
+        
+        if( isset($_CACHE_ON_POST_CHANGE[$post_id]) ){
+            return $_CACHE_ON_POST_CHANGE[$post_id];
+        }
+        
+        $_CACHE_ON_POST_CHANGE[$post_id] = SpeedUp_CacheUtils::purge_cache_post($post_id);
+        
+        return $_CACHE_ON_POST_CHANGE[$post_id];
     }
     
     /**

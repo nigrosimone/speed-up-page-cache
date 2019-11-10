@@ -197,7 +197,7 @@ class SpeedUp_AdminManager {
                     case 'supc_flush_url':
                         $url = SpeedUp_CacheUtils::get_request('url');
                         $url = urldecode($url);
-                        $result = SpeedUp_CacheUtils::purge_cache_url($url);
+                        $result = SpeedUp_CacheUtils::purge_cache_url($url, false);
                         break;
                 }
                 
@@ -391,7 +391,7 @@ class SpeedUp_AdminManager {
             
             $cache_exception_urls = $this->config->get('cache_exception_urls');
             $html .= '<label for="textarea">Cache exception urls: </label><br />';
-            $html .= '<textarea name="cache_exception_urls" rows="10" cols="80">';
+            $html .= '<textarea name="cache_exception_urls" rows="10" cols="80" class="regular-text" style="width: 100%">';
             if( is_array($cache_exception_urls) ){
                 $html .= implode("\r\n", $cache_exception_urls);
             }

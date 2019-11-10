@@ -187,6 +187,20 @@ class SpeedUp_CacheUtils {
     {
         $paths = self::cached_paths();
         
+        return self::purge_paths($paths);
+    }
+    
+    /**
+     * Purge all paths.
+     *
+     * @since  1.0.7
+     * @static
+     * @param  array $paths
+     * @access public
+     * @return boolean
+     */
+    public static function purge_paths($paths)
+    {
         if( empty($paths) ){
             return true;
         }
@@ -194,8 +208,10 @@ class SpeedUp_CacheUtils {
         $result = true;
         
         foreach ($paths as $path){
-            if( !@unlink($path) ){
-                $result = false;
+            if( file_exists($path) ){
+                if( !@unlink($path) ){
+                    $result = false;
+                }
             }
         }
         
@@ -214,7 +230,24 @@ class SpeedUp_CacheUtils {
     {
         $cache_dir = self::get_cache_dir();
         
-        return self::rglob($cache_dir . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
+        return self::cached_child_paths($cache_dir);
+    }
+    
+    /**
+     * Return all cached paths by parent path.
+     *
+     * @since  1.0.7
+     * @static
+     * @param  string $parentPath 
+     * @access public
+     * @return array
+     */
+    public static function cached_child_paths($parentPath)
+    {
+        if( empty($parentPath) || !is_dir($parentPath) ){
+            return array();
+        }
+        return self::rglob($parentPath . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
     }
     
     /**
@@ -234,8 +267,6 @@ class SpeedUp_CacheUtils {
         }
         return $cached_urls;
     }
-    
-    
     
     /**
      * Automatically purge all page cache on post changes.
@@ -279,7 +310,7 @@ class SpeedUp_CacheUtils {
             
             $result = true;
             foreach ($urls as $url){
-                if( !self::purge_cache_url($url) ){
+                if( !self::purge_cache_url($url, true) ){
                     $result = false;
                 }
             }
@@ -294,10 +325,11 @@ class SpeedUp_CacheUtils {
      * @since  1.0.3
      * @static
      * @access public
-     * @param  int $url URL.
+     * @param  string $url URL.
+     * @param  boolean $withChildren If true delete children URL.
      * @return boolean
      */
-    public static function purge_cache_url( $url )
+    public static function purge_cache_url( $url, $withChildren = false )
     {
         if( empty($url) ){
             return false;
@@ -307,12 +339,13 @@ class SpeedUp_CacheUtils {
         $path = self::url_to_path($url);
         
         if( !empty($path) ){
-            $filename = $cache_dir . $path . '_index.html';
-            if( file_exists($filename) ){
-                return @unlink($filename);
-            } else {
-                return true;
+            $paths = array($cache_dir . $path . '_index.html');
+            
+            if( $withChildren ){
+                $paths = array_merge($paths, self::cached_child_paths($cache_dir . $path));
             }
+            
+            return self::purge_paths($paths);
         }
         
         return false;
