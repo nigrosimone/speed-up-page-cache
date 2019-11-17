@@ -3,8 +3,8 @@ Contributors: nigro.simone
 Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
-Tested up to: 5.2
-Stable tag: 1.0.8
+Tested up to: 5.3
+Stable tag: 1.0.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,7 +13,19 @@ A very simple plugin to make your site run lightning fast with page caching.
 == Description ==
 
 Speed Up - Page Cache was constructed for made caching dead simple. Simple one-click install. That's it.
-Improves the SEO and user experience of your site by increasing website performance, reducing load times.
+
+When a page is rendered, php and mysql are used. Therefore, system needs RAM and CPU.
+If many visitors come to a site, system uses lots of RAM and CPU so page is rendered so slowly. In this case, you need a cache system not to render page again and again. Cache system generates a static html file and saves. Other users reach to static html page.
+
+After a html file is generated your webserver will serve that file instead of processing the comparatively heavier and more expensive WordPress PHP scripts.
+
+The static html files will be served to the vast majority of your users:
+- Users who are not logged in.
+- Users who have not left a comment on your blog.
+- Or users who have not viewed a password protected post.
+99% of your visitors will be served static html files. One cached file can be served thousands of times. 
+
+In addition, the site speed is used in Google’s search ranking algorithm so cache plugins that can improve your page load time will also improve your SEO ranking.
 
 == Installation ==
 
@@ -21,6 +33,10 @@ Improves the SEO and user experience of your site by increasing website performa
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.9 =
+* Tested up to Wordpress 5.3
+* Add action listener for clean_post_cache
 
 = 1.0.8 =
 * Purge taxonomy pagination

@@ -3,7 +3,7 @@
  * Plugin Name: Speed Up - Page Cache
  * Plugin URI: http://wordpress.org/plugins/speed-up-page-cache/
  * Description: A simple page caching plugin.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Author: Simone Nigro
  * Author URI: https://profiles.wordpress.org/nigrosimone
  * License: GPLv2 or later
@@ -76,6 +76,7 @@ class SpeedUp_PageCache
         // when post status is changed to draft - it looses its URL
         // so we need to flush before update is happened
         add_action( 'pre_post_update', array( $this, 'on_post_change'), 0 );
+        add_action( 'clean_post_cache', array($this, 'on_post_change'), 0 );
         add_action( 'wp_trash_post', array($this, 'on_post_change'), 0 );
         add_action( 'publish_post', array($this, 'on_post_change'), 0, 2 );
         add_action( 'switch_theme', array($this, 'on_change'), 0 );

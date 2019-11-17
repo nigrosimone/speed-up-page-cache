@@ -15,7 +15,6 @@ class SpeedUp_AdminNotice {
     const MESSAGE_SUCCESS_CONFIGSAVE = 'Config updated!';
     const MESSAGE_ERROR_CONFIGSAVE = 'Config save failsed!';
     
-    
     /**
      * Notice message
      * 
@@ -66,7 +65,8 @@ class SpeedUp_AdminNotice {
      * @since 1.0.5
      * @access public
      */
-    public function add_action(){
+    public function add_action()
+    {
         add_action( 'admin_notices', array($this, 'print'));
         add_action( 'network_admin_notices', array($this, 'print')); 
     }
@@ -108,7 +108,8 @@ class SpeedUp_AdminNotice {
      * @param  boolean $dismissible
      * @return SpeedUp_AdminNotice
      */
-    public static function success_notice($message, $dismissible = true){
+    public static function success_notice($message, $dismissible = true)
+    {
         return new self($message, self::TYPE_SUCCESS, $dismissible);
     }
     
@@ -122,7 +123,8 @@ class SpeedUp_AdminNotice {
      * @param  boolean $dismissible
      * @return SpeedUp_AdminNotice
      */
-    public static function error_notice($message, $dismissible = true){
+    public static function error_notice($message, $dismissible = true)
+    {
         return new self($message, self::TYPE_ERROR, $dismissible);
     }
 }
