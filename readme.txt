@@ -4,7 +4,7 @@ Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
 Tested up to: 5.3
-Stable tag: 1.0.9
+Stable tag: 1.0.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,7 @@ The static html files will be served to the vast majority of your users:
 - Or users who have not viewed a password protected post.
 99% of your visitors will be served static html files. One cached file can be served thousands of times. 
 
-In addition, the site speed is used in Google’s search ranking algorithm so cache plugins that can improve your page load time will also improve your SEO ranking.
+In addition, the site speed is used in Google's search ranking algorithm so cache plugins that can improve your page load time will also improve your SEO ranking.
 
 == Installation ==
 
@@ -33,6 +33,9 @@ In addition, the site speed is used in Google’s search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.10 =
+* Readme update
 
 = 1.0.9 =
 * Tested up to Wordpress 5.3
