@@ -299,6 +299,13 @@ class SpeedUp_CacheUtils {
             $urls = array();
                 
             $urls[] = get_permalink( $post_id );
+            
+            $page_for_posts = get_option( 'page_for_posts' );
+            if( $page_for_posts ){
+                $urls[] = get_permalink( $page_for_posts );
+            } else {
+                $urls[] = get_home_url();
+            }
                 
             $taxonomies = get_post_taxonomies( $post_id );
             $terms = wp_get_post_terms( $post_id, $taxonomies );

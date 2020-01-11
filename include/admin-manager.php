@@ -413,6 +413,7 @@ class SpeedUp_AdminManager {
         // sidebar
         $html .= '<div id="postbox-container-1" class="postbox-container">';
         $html .= '<div class="meta-box-sortables">';
+        
         $html .= '<div class="postbox">';
         $html .= '<h2><span>Donation</span></h2>';
         $html .= '<div class="inside">';
@@ -420,6 +421,15 @@ class SpeedUp_AdminManager {
         $html .= '<br />&hearts; <a href="http://paypal.me/snwp" target="_blank">Donate</a>';
         $html .= '</div>'; // end inside
         $html .= '</div>'; // end postbox
+        
+        $html .= '<div class="postbox">';
+        $html .= '<h2><span>Review</span></h2>';
+        $html .= '<div class="inside">';
+        $html .= 'I would really appreciate it if you could take a minute and post a review. Thank you for your help!.';
+        $html .= '<br /><a href="https://wordpress.org/support/plugin/speed-up-page-cache/reviews/" target="_blank">Make a review</a>';
+        $html .= '</div>'; // end inside
+        $html .= '</div>'; // end postbox
+        
         $html .= '</div>'; // end post-body-content
         $html .= '</div>'; // end meta-box-sortables
         
