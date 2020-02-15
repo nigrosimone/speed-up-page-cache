@@ -111,8 +111,8 @@ class SpeedUp_ConfigManager {
                 return false;
             }
             
-            if (function_exists('opcache_reset')) {
-                opcache_reset();
+            if (function_exists('opcache_invalidate')) {
+                opcache_invalidate($filename, true);
             }
             
             $this->config = $config;

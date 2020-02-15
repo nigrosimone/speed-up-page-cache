@@ -121,13 +121,18 @@ class SpeedUp_CacheUtils {
      * @access public
      * @param  string $pattern
      * @param  int    $flags
+     * @param  integer $maxDeep Max children deep searching.
      * @return array
      */
-    public static function rglob($pattern, $flags = 0) 
+    public static function rglob($pattern, $flags = 0, $maxDeep = 2) 
     {
         $files = glob($pattern, $flags);
+        if( $maxDeep <= 0 ){
+            return $files;
+        }
+        $basename = basename($pattern);
         foreach (glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir) {
-            $files = array_merge($files, self::rglob($dir.'/'.basename($pattern), $flags));
+            $files = array_merge($files, self::rglob($dir.'/'.$basename, $flags, $maxDeep - 1));
         }
         return $files;
     }
@@ -230,7 +235,7 @@ class SpeedUp_CacheUtils {
     {
         $cache_dir = self::get_cache_dir();
         
-        return self::cached_child_paths($cache_dir);
+        return self::cached_child_paths($cache_dir, PHP_INT_MAX);
     }
     
     /**
@@ -238,16 +243,17 @@ class SpeedUp_CacheUtils {
      *
      * @since  1.0.7
      * @static
-     * @param  string $parentPath 
+     * @param  string $parentPath
+     * @param  integer $maxDeep Max children deep searching. 
      * @access public
      * @return array
      */
-    public static function cached_child_paths($parentPath)
+    public static function cached_child_paths($parentPath, $maxDeep = 2)
     {
         if( empty($parentPath) || !is_dir($parentPath) ){
             return array();
         }
-        return self::rglob($parentPath . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT);
+        return self::rglob($parentPath . '*' . DIRECTORY_SEPARATOR . '_index.html', GLOB_NOSORT, $maxDeep);
     }
     
     /**
@@ -296,28 +302,35 @@ class SpeedUp_CacheUtils {
         if( !in_array( $post->post_type, array( 'revision', 'attachment' ) ) &&
             in_array( $post->post_status, array( 'publish' ) ) ){
                 
-            $urls = array();
+            $urlsWithChildren = array();
+            $urlsWithoutChildren = array();
                 
-            $urls[] = get_permalink( $post_id );
+            $urlsWithChildren[] = get_permalink( $post_id );
             
             $page_for_posts = get_option( 'page_for_posts' );
             if( $page_for_posts ){
-                $urls[] = get_permalink( $page_for_posts );
+                $urlsWithoutChildren[] = get_permalink( $page_for_posts );
             } else {
-                $urls[] = get_home_url();
+                $urlsWithoutChildren[] = get_home_url();
             }
                 
             $taxonomies = get_post_taxonomies( $post_id );
             $terms = wp_get_post_terms( $post_id, $taxonomies );
             foreach ( $terms as $term ) {
-                $urls[] = get_term_link( $term, $term->taxonomy );
+                $urlsWithChildren[] = get_term_link( $term, $term->taxonomy );
             }
                 
-            $urls[] = get_author_posts_url( $post->post_author );
+            $urlsWithChildren[] = get_author_posts_url( $post->post_author );
             
             $result = true;
-            foreach ($urls as $url){
-                if( !self::purge_cache_url($url, true) ){
+            foreach ($urlsWithChildren as $urlWithChildren){
+                if( !self::purge_cache_url($urlWithChildren, 2) ){
+                    $result = false;
+                }
+            }
+            
+            foreach ($urlsWithoutChildren as $urlWithoutChildren){
+                if( !self::purge_cache_url($urlWithoutChildren, 0) ){
                     $result = false;
                 }
             }
@@ -333,10 +346,10 @@ class SpeedUp_CacheUtils {
      * @static
      * @access public
      * @param  string $url URL.
-     * @param  boolean $withChildren If true delete children URL.
+     * @param  integer $maxDeep Max children deep searching.
      * @return boolean
      */
-    public static function purge_cache_url( $url, $withChildren = false )
+    public static function purge_cache_url( $url, $maxDeep = 0 )
     {
         if( empty($url) ){
             return false;
@@ -348,8 +361,8 @@ class SpeedUp_CacheUtils {
         if( !empty($path) ){
             $paths = array($cache_dir . $path . '_index.html');
             
-            if( $withChildren ){
-                $paths = array_merge($paths, self::cached_child_paths($cache_dir . $path));
+            if( $maxDeep > 0 ){
+                $paths = array_merge($paths, self::cached_child_paths($cache_dir . $path, $maxDeep));
             }
             
             return self::purge_paths($paths);

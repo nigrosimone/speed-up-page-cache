@@ -197,7 +197,7 @@ class SpeedUp_AdminManager {
                     case 'supc_flush_url':
                         $url = SpeedUp_CacheUtils::get_request('url');
                         $url = urldecode($url);
-                        $result = SpeedUp_CacheUtils::purge_cache_url($url, false);
+                        $result = SpeedUp_CacheUtils::purge_cache_url($url, 0);
                         break;
                 }
                 
