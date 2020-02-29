@@ -233,12 +233,6 @@ class SpeedUp_CacheManager {
             return false;
         }
         
-        // check if filter is false
-        if( apply_filters('speed-up-page-cache-cacheable', null) === true ){
-            $this->sendHeaderMiss('speed-up-page-cache-cacheable filter return true');
-            return false;
-        }
-        
         // check if SUPC_CACHEABLE is false
         if( defined( 'SUPC_CACHEABLE' ) && SUPC_CACHEABLE === false ){
             $this->sendHeaderMiss('SUPC_CACHEABLE costant is false');
@@ -251,9 +245,16 @@ class SpeedUp_CacheManager {
             return false;
         }
         
+        $url = SpeedUp_CacheUtils::get_url();
+        
+        // check if filter is false
+        if( apply_filters('speed_up_page_cache_cacheable', $url) === false ){
+            $this->sendHeaderMiss('speed_up_page_cache_cacheable filter return false');
+            return false;
+        }
+        
         // check if current url is in cache_exception_urls
         $cache_exception_urls = $this->config->get('cache_exception_urls');
-        $url = SpeedUp_CacheUtils::get_url();
         if( $url && is_array($cache_exception_urls) && in_array($url, $cache_exception_urls) ){
             $this->sendHeaderMiss('url is in cache_exception_urls');
             return false;

@@ -79,9 +79,7 @@ class SpeedUp_WpconfigUtils {
             return false;
         }
         
-        if (function_exists('opcache_reset')) {
-            opcache_reset();
-        }
+        SpeedUp_CacheUtils::opcache_invalidate($config_path);
         
         return true;
     }

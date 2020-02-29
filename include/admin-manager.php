@@ -425,7 +425,7 @@ class SpeedUp_AdminManager {
         $html .= '<div class="postbox">';
         $html .= '<h2><span>Review</span></h2>';
         $html .= '<div class="inside">';
-        $html .= 'I would really appreciate it if you could take a minute and post a review. Thank you for your help!.';
+        $html .= 'I would really appreciate it if you could take a minute and post a review. Thank you for your help!';
         $html .= '<br /><a href="https://wordpress.org/support/plugin/speed-up-page-cache/reviews/" target="_blank">Make a review</a>';
         $html .= '</div>'; // end inside
         $html .= '</div>'; // end postbox

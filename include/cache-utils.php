@@ -370,4 +370,21 @@ class SpeedUp_CacheUtils {
         
         return false;
     }
+    
+    /**
+     * Invalidates a cached script.
+     *
+     * @since  1.0.13
+     * @static
+     * @access public
+     * @param  string $script The path to the script being invalidated.
+     * @return boolean
+     */
+    public static function opcache_invalidate( $script )
+    {
+        if ( function_exists('opcache_invalidate') ) {
+            return @opcache_invalidate($script, true);
+        }
+        return false;
+    }
 }

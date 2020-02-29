@@ -4,7 +4,7 @@ Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
 Tested up to: 5.3
-Stable tag: 1.0.12
+Stable tag: 1.0.13
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,10 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.13 =
+* Better opcache invalidation
+* Add filter speed_up_page_cache_cacheable.
 
 = 1.0.12 =
 * Better opcache invalidation
@@ -73,7 +77,6 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 * Add plugin page (draft)
 
 = 1.0.2 =
-* Add filter speed-up-page-cache-cacheable.
 * Add action supc_purge_cache_post.
 * Read me.
 
