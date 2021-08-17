@@ -8,12 +8,12 @@ class SpeedUp_AdminNotice {
     const TYPE_ERROR = 'error';
     
     const MESSAGE_SUCCESS_FLUSHED = 'Cache flushed!';
-    const MESSAGE_ERROR_FLUSHED = 'Cache flush failsed!';
+    const MESSAGE_ERROR_FLUSHED = 'Cache flush failed!';
     const MESSAGE_ERROR_DROPIN = 'The dropin is not installed. Please manually copy the <code>/wp-content/plugins/speed-up-page-cache/dropin/advanced-cache.php</code> file into the <code>/wp-content/</code> directory';
     const MESSAGE_ERROR_WPCACHE = '<code>WP_CACHE</code> is not enabled. Please manually set the <code>define(\'WP_CACHE\', true);</code> costant into the <code>wp-config.php</code>';
     const MESSAGE_ERROR_CONFIG = 'Config are not loaded';
     const MESSAGE_SUCCESS_CONFIGSAVE = 'Config updated!';
-    const MESSAGE_ERROR_CONFIGSAVE = 'Config save failsed!';
+    const MESSAGE_ERROR_CONFIGSAVE = 'Config save failed!';
     
     /**
      * Notice message
