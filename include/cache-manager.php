@@ -91,7 +91,7 @@ class SpeedUp_CacheManager {
         
         // Make sure we can read/write files to cache dir
         if ( !is_dir( $path ) ) {
-            if ( !@mkdir( $path, 0777, true ) ) {
+            if ( !wp_mkdir_p( $path ) ) {
                 return $buffer;
             }
         }
