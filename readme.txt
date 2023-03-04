@@ -3,7 +3,7 @@ Contributors: nigro.simone
 Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
-Tested up to: 5.9
+Tested up to: 6.0
 Stable tag: 1.0.18
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -33,6 +33,9 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.19 =
+* Tested up to Wordpress 6.0
 
 = 1.0.18 =
 * Fix mkdir
