@@ -4,7 +4,7 @@ Donate link: http://paypal.me/snwp
 Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
 Requires at least: 3.5
 Tested up to: 6.0
-Stable tag: 1.0.18
+Stable tag: 1.0.20
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
