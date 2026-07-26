@@ -5,7 +5,7 @@ Tags: page cache, full page cache, static html, purge cache, performance
 Requires at least: 6.0
 Requires PHP: 7.0
 Tested up to: 7.0
-Stable tag: 1.0.23
+Stable tag: 1.0.24
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,15 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.24 =
+* Fix: cache files are written atomically, so a concurrent request can no longer be served a half-written page
+* Fix: an empty cache file, left by an interrupted write, is no longer served as a blank page
+* Fix: saving the settings now purges the cache, so adding a cache exception URL takes effect immediately instead of leaving the old copy served by Apache
+* Fix: request paths containing .. are rejected before they reach the filesystem
+* Purge the whole cache when the theme is customised, when widgets change, when site options change (title, front page, permalinks, posts per page), and when a plugin is activated, deactivated or updated
+* Purge the whole cache when saving a template, template part, global styles or navigation in the Site Editor: those have no URL of their own but change every page that uses them
+* Fix: purging your own profile now works too, not only another user's
 
 = 1.0.23 =
 * Serve cached pages to requests carrying only tracking parameters: traffic from ads, social networks and newsletters is no longer excluded from the cache
