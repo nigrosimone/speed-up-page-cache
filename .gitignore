@@ -1,0 +1,11 @@
+/vendor/
+/node_modules/
+/.githooks/
+.phpunit.result.cache
+.phpcs-cache
+/build/
+*.log
+
+# Windows / macOS
+Thumbs.db
+.DS_Store

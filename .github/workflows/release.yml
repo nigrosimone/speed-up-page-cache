@@ -1,0 +1,34 @@
+name: Rilascio
+
+# Passo 2 di 2 del rilascio: parte da solo quando su main arriva un commit che
+# alza la versione, tipicamente il merge della PR aperta da prepare-release.
+# La logica sta in nigrosimone/wp-plugin-ci.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Ripubblica anche se il tag esiste gia (per riprovare un deploy fallito)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: nigrosimone/wp-plugin-ci/.github/workflows/plugin-release.yml@v1
+    with:
+      min-php: '7.0-'
+      # Su push il contesto inputs non esiste: || false lo riporta a un booleano.
+      force: ${{ inputs.force || false }}
+    secrets:
+      SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+      SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}

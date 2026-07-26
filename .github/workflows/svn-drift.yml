@@ -1,0 +1,18 @@
+name: Controllo divergenza SVN
+
+# Rete di sicurezza del modello "git e' la sorgente di verita', SVN e' solo il
+# canale di pubblicazione": se il trunk su wordpress.org non coincide piu' con
+# main, apre una issue. La logica sta in nigrosimone/wp-plugin-ci.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # ogni lunedi alle 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    uses: nigrosimone/wp-plugin-ci/.github/workflows/plugin-svn-drift.yml@v1

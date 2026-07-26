@@ -1,0 +1,26 @@
+name: CI
+
+# La logica sta in nigrosimone/wp-plugin-ci, condivisa da tutti i plugin.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: nigrosimone/wp-plugin-ci/.github/workflows/plugin-ci.yml@v1
+    with:
+      min-php: '7.0-'
+      # DA COMPILARE dopo la prima esecuzione: i rilievi del Plugin Check che si
+      # sceglie di accettare, su una riga sola e senza spazi. Vanno esclusi anche
+      # in phpcs.xml.dist, e le due liste vanno tenute allineate.
+      plugin-check-ignore-codes: ''

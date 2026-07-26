@@ -1,0 +1,41 @@
+# Fine riga deterministiche: il repo contiene sempre LF, a prescindere dal
+# core.autocrlf della macchina.
+* text=auto eol=lf
+
+*.php  text eol=lf
+*.txt  text eol=lf
+*.html text eol=lf
+*.js   text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+
+*.jpg binary
+*.png binary
+*.gif binary
+*.mo  binary
+
+# ATTENZIONE: se svn-to-git.ps1 ha segnalato file in CRLF su SVN, vanno elencati
+# qui sotto con "-text", altrimenti git li convertira' a LF e il primo rilascio
+# riscrivera' l'intero file cambiando cio' che ricevono gli utenti.
+dropin/advanced-cache.php    -text
+include/admin-manager.php    -text
+include/admin-notice.php     -text
+include/cache-manager.php    -text
+include/cache-utils.php      -text
+include/config-manager.php   -text
+include/dropin-utils.php     -text
+include/htaccess-utils.php   -text
+include/wpconfig-utils.php   -text
+
+# File di sviluppo esclusi dagli archivi generati da GitHub ("Download ZIP").
+# Cio' che viene pubblicato su wordpress.org e' governato da .distignore.
+/.github         export-ignore
+/tests           export-ignore
+/.wordpress-org  export-ignore
+.gitattributes   export-ignore
+.gitignore       export-ignore
+.distignore      export-ignore
+phpcs.xml.dist   export-ignore
+phpunit.xml.dist export-ignore
+composer.json    export-ignore
+composer.lock    export-ignore

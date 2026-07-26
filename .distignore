@@ -1,0 +1,28 @@
+# Tutto cio' che e' elencato qui NON viene pubblicato su wordpress.org.
+# Lo zip scaricato dagli utenti deve contenere solo i file del plugin.
+
+/.git
+/.github
+/.githooks
+/.wordpress-org
+/tests
+/bin
+/vendor
+/node_modules
+/build
+
+.gitattributes
+.gitignore
+.distignore
+.git-blame-ignore-revs
+composer.json
+composer.lock
+phpcs.xml.dist
+phpunit.xml.dist
+README.md
+
+# Artefatti generati dagli strumenti. Non basta .gitignore: la action di deploy
+# copia dal disco, non da git, quindi un file ignorato da git ma presente nella
+# cartella finirebbe comunque su wordpress.org.
+.phpunit.result.cache
+.phpcs-cache

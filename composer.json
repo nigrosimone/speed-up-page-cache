@@ -1,0 +1,47 @@
+{
+    "name": "nigrosimone/speed-up-page-cache",
+    "description": "A simple page caching plugin.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://wordpress.org/plugins/speed-up-page-cache/",
+    "authors": [
+        {
+            "name": "Simone Nigro",
+            "email": "nigro.simone@gmail.com",
+            "homepage": "https://profiles.wordpress.org/nigrosimone"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/nigrosimone/wp-plugin-ci"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "nigrosimone/wp-plugin-ci": "^1.0",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "phpunit/phpunit": "^9.6",        "squizlabs/php_codesniffer": "^3.9",
+        "wp-coding-standards/wpcs": "^3.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-install-cmd": "wp-plugin-install-hooks",
+        "post-update-cmd": "wp-plugin-install-hooks",
+        "lint": "wp-plugin-lint",
+        "check-version": "wp-plugin-check-version",
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "compat": "phpcs -p --standard=PHPCompatibilityWP --runtime-set testVersion 7.0- --extensions=php --ignore=vendor,node_modules,tests,build .",
+        "build-dist": "bash vendor/nigrosimone/wp-plugin-ci/bin/build-dist.sh",
+        "test": "phpunit --do-not-cache-result"
+    }
+}
