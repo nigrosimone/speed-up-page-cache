@@ -41,6 +41,24 @@ Only visitors for whom the page is genuinely identical:
 Logged-in users, comment authors, POST requests, 404s, feeds and pages containing
 `DONOTCACHEPAGE` always render normally.
 
+### Tracking parameters don't break the cache
+
+A URL like `/article/?utm_source=newsletter` is the same page as `/article/`. The
+parameter says where the visitor came from; it doesn't change what they see.
+
+The cache recognises the tracking parameters used by Google Ads, Analytics, Meta,
+Microsoft, LinkedIn, TikTok, Instagram, Mailchimp, HubSpot, Matomo, Piwik and Yandex, and
+serves those requests from cache. Anything it doesn't recognise — `?s=`, `?p=123`,
+`?paged=2`, a filter your theme added — is treated as a different page and rendered fresh.
+
+This matters more than it sounds: traffic from ads, social networks and newsletters almost
+always carries a tracking parameter, and it's exactly the traffic that arrives in bursts.
+Before this, none of it was cached.
+
+The list is deliberately not filterable. Adding a parameter that *does* change the page
+would make one visitor's version get served to everybody, and a filter wouldn't take effect
+on the read path anyway — plugins aren't loaded yet when the cache is served.
+
 ## Setup
 
 Activation does three things, and each one needs to be possible:

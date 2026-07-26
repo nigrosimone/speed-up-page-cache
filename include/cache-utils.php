@@ -118,6 +118,133 @@ class SpeedUp_CacheUtils {
 	}
 
 	/**
+	 * Query string parameters that only track where a visitor came from.
+	 *
+	 * They do not change the page, so a request carrying nothing else can be
+	 * served from cache. This is the difference between caching the traffic that
+	 * arrives from ads, social networks and newsletters, and not caching it at
+	 * all.
+	 *
+	 * Deliberately not filterable: adding a parameter that does change the page
+	 * would make the cache serve one visitor's version to everybody, and the
+	 * filter would only apply on the write path anyway, since plugins are not
+	 * loaded yet when the cache is read.
+	 *
+	 * @since  1.0.23
+	 * @static
+	 * @access private
+	 * @return array
+	 */
+	private static function tracking_parameters() {
+		return array(
+			// Google Analytics and Google Ads.
+			'gclid',
+			'gclsrc',
+			'gbraid',
+			'wbraid',
+			'dclid',
+			'gad_source',
+			'_ga',
+			'_gl',
+			// Meta.
+			'fbclid',
+			// Microsoft, LinkedIn, X, TikTok, Reddit, Pinterest.
+			'msclkid',
+			'li_fat_id',
+			'twclid',
+			'ttclid',
+			'rdt_cid',
+			'epik',
+			// Instagram share links.
+			'igshid',
+			'igsh',
+			// Yandex.
+			'yclid',
+			// Mailchimp.
+			'mc_cid',
+			'mc_eid',
+			// HubSpot.
+			'_hsenc',
+			'_hsmi',
+			'hsCtaTracking',
+			// Klaviyo, Matomo.
+			'_kx',
+			'mtm_source',
+			'mtm_medium',
+			'mtm_campaign',
+			'mtm_keyword',
+			'mtm_content',
+			'mtm_group',
+			'mtm_placement',
+			'mtm_cid',
+		);
+	}
+
+	/**
+	 * Prefixes whose parameters only track the visitor's origin.
+	 *
+	 * @since  1.0.23
+	 * @static
+	 * @access private
+	 * @return array
+	 */
+	private static function tracking_parameter_prefixes() {
+		return array(
+			'utm_',   // Every Urchin parameter, including the newer utm_id and utm_creative_format.
+			'hsa_',   // HubSpot Ads.
+			'pk_',    // Piwik.
+		);
+	}
+
+	/**
+	 * Return true when the query string carries something that changes the page.
+	 *
+	 * A request with only tracking parameters is the same page as the request
+	 * without them, so it can be served from cache. A request with "?s=",
+	 * "?p=123" or "?paged=2" is a different page and must not be.
+	 *
+	 * @since  1.0.23
+	 * @static
+	 * @access public
+	 * @return boolean
+	 */
+	public static function has_significant_query_string() {
+		if ( empty( $_SERVER['QUERY_STRING'] ) ) {
+			return false;
+		}
+
+		$parameters = array();
+
+		// parse_str e' PHP puro: questo codice gira prima che WordPress esista.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		parse_str( $_SERVER['QUERY_STRING'], $parameters );
+
+		$tracking = self::tracking_parameters();
+		$prefixes = self::tracking_parameter_prefixes();
+
+		foreach ( array_keys( $parameters ) as $name ) {
+			if ( in_array( $name, $tracking, true ) ) {
+				continue;
+			}
+
+			$is_prefixed = false;
+			foreach ( $prefixes as $prefix ) {
+				if ( 0 === strpos( $name, $prefix ) ) {
+					$is_prefixed = true;
+					break;
+				}
+			}
+
+			if ( ! $is_prefixed ) {
+				// Basta un parametro non riconosciuto per non fidarsi.
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Recursive glob.
 	 *
 	 * @since  1.0.0

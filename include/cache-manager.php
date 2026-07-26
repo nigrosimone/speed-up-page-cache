@@ -146,9 +146,18 @@ class SpeedUp_CacheManager {
 			return false;
 		}
 
-		// Don't cache when URL query string are defined
-		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-			$this->send_header_miss( 'QUERY_STRING not empty' );
+		// Don't cache when the query string changes the page.
+		//
+		// Prima qualsiasi query string escludeva la cache. Significava che tutto
+		// il traffico da annunci, social e newsletter — che arriva con
+		// ?utm_source=, ?fbclid=, ?gclid= — non veniva mai servito dalla cache,
+		// pur essendo la stessa pagina. Su molti siti e' la maggioranza delle
+		// visite, e sono proprio i picchi per cui la cache esiste.
+		//
+		// Il percorso di cache ignora gia' la query string (get_url_path usa
+		// strtok), quindi non serve altro: basta non rifiutare la richiesta.
+		if ( SpeedUp_CacheUtils::has_significant_query_string() ) {
+			$this->send_header_miss( 'query string changes the page' );
 			return false;
 		}
 
