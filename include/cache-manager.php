@@ -147,7 +147,7 @@ class SpeedUp_CacheManager {
 		}
 
 		// Don't cache when URL query string are defined
-		if ( '' !== $_SERVER['QUERY_STRING'] ) {
+		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
 			$this->send_header_miss( 'QUERY_STRING not empty' );
 			return false;
 		}
@@ -237,7 +237,12 @@ class SpeedUp_CacheManager {
 		}
 
 		// check if wp-login.php page
-		if ( strpos( $_SERVER['SCRIPT_NAME'], 'wp-login.php' ) !== false ) {
+		// Niente sanitize_text_field() ne' wp_unslash() qui: questo file viene
+		// caricato dal drop-in, prima che WordPress carichi formatting.php.
+		// Quelle funzioni non esistono ancora e chiamarle sarebbe un fatal error.
+		// Il valore serve solo a strpos e non viene mai stampato ne' salvato.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( isset( $_SERVER['SCRIPT_NAME'] ) && false !== strpos( $_SERVER['SCRIPT_NAME'], 'wp-login.php' ) ) {
 			$this->send_header_miss( 'wp-login.php not cacheable' );
 			return false;
 		}
@@ -327,6 +332,13 @@ class SpeedUp_CacheManager {
 		if ( empty( $host ) ) {
 			return null;
 		}
+		if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+			return null;
+		}
+
+		// Come sopra: nessuna funzione di WordPress e' disponibile a questo punto.
+		// Il valore diventa un percorso su disco, mai output.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$uri  = strtok( $_SERVER['REQUEST_URI'], '?' );
 		$path = str_replace( '/', DIRECTORY_SEPARATOR, $host . $uri );
 		return trim( $path, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
