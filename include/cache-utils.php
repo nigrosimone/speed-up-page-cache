@@ -513,4 +513,69 @@ class SpeedUp_CacheUtils {
 		}
 		return false;
 	}
+
+	/**
+	 * Return true when a post is something that renders every page.
+	 *
+	 * The Site Editor stores templates, template parts, global styles and
+	 * navigation as posts. They have no URL of their own, so purging "their URL"
+	 * is meaningless: what changes is every page that uses them.
+	 *
+	 * @since  1.0.24
+	 * @static
+	 * @access public
+	 * @param  int $post_id
+	 * @return boolean
+	 */
+	public static function post_affects_whole_site( $post_id ) {
+
+		if ( ! function_exists( 'get_post_type' ) ) {
+			return false;
+		}
+
+		$types = array(
+			'wp_template',       // A block theme template.
+			'wp_template_part',  // A header or footer.
+			'wp_global_styles',  // Colours and typography from the Site Editor.
+			'wp_navigation',     // A navigation block's menu.
+		);
+
+		return in_array( get_post_type( $post_id ), $types, true );
+	}
+
+	/**
+	 * Return true when changing this option changes every page on the site.
+	 *
+	 * Checked from the "updated_option" hook, which fires on every option write,
+	 * so it has to stay cheap: an in_array against a short list.
+	 *
+	 * @since  1.0.24
+	 * @static
+	 * @access public
+	 * @param  string $option
+	 * @return boolean
+	 */
+	public static function is_site_wide_option( $option ) {
+
+		$options = array(
+			'blogname',            // Shown in the header of every page.
+			'blogdescription',
+			'home',
+			'siteurl',
+			'permalink_structure', // Every link on the site changes.
+			'show_on_front',
+			'page_on_front',
+			'page_for_posts',
+			'posts_per_page',      // Repaginates every archive.
+			'date_format',
+			'time_format',
+			'timezone_string',
+			'gmt_offset',
+			'sticky_posts',        // Reorders the blog page.
+			'category_base',
+			'tag_base',
+		);
+
+		return in_array( $option, $options, true );
+	}
 }

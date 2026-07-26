@@ -35,6 +35,15 @@ if (!function_exists('trailingslashit')) {
     }
 }
 
+/** Tipo restituito da get_post_type(), controllato dai test. */
+$GLOBALS['speedup_post_type'] = 'post';
+
+if (!function_exists('get_post_type')) {
+    function get_post_type($post = null) {
+        return $GLOBALS['speedup_post_type'];
+    }
+}
+
 // Le classi di utilita' non hanno bisogno di altro: si caricano da sole.
 require_once dirname(__DIR__) . '/include/cache-utils.php';
 require_once dirname(__DIR__) . '/include/htaccess-utils.php';
