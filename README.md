@@ -80,8 +80,26 @@ never fails silently.
 - **Cache exception URLs** — one per line, never cached
 - **Scheduled purge** — hourly, twice daily, daily, weekly or monthly
 
-The cache also purges itself when you publish or edit a post: that post, the blog page, and
-the relevant taxonomy and pagination pages.
+### When the cache purges itself
+
+Editing a post purges that post, the blog page, and the relevant taxonomy and pagination
+pages. `clean_post_cache` covers most of the content lifecycle, including new comments —
+WordPress calls it when it updates a post's comment count.
+
+Everything below changes *every* page, so it empties the whole cache:
+
+| Change | |
+| --- | --- |
+| Switching or customising the theme | `switch_theme`, `customize_save_after` |
+| Editing widgets | `update_option_sidebars_widgets` |
+| Site title, tagline, front page, posts per page, permalinks, date format | `updated_option`, against a short list |
+| Activating, deactivating or updating a plugin | `activated_plugin`, `deactivated_plugin`, `upgrader_process_complete` |
+| Editing a user profile, including your own | `edit_user_profile_update`, `personal_options_update` |
+| Editing a menu or a term | `wp_update_nav_menu`, `edited_term` |
+| Saving a template, template part, global styles or navigation in the Site Editor | Those are posts with no URL of their own |
+
+A full purge happens at most once per request: saving Settings → General writes two options
+and fires the hook twice, and emptying the cache directory twice for one click is waste.
 
 There's a `speed-up-page-cache-cacheable` filter to decide per-request whether a page
 should be cached, and a `supc_save_config` action fired when settings are saved.

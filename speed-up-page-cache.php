@@ -83,6 +83,19 @@ class SpeedUp_PageCache {
 		add_action( 'edit_user_profile_update', array( $this, 'on_change' ), 0 );
 		add_action( 'edited_term', array( $this, 'on_change' ), 0 );
 
+		// Things that change every page on the site, and that used to leave the
+		// cache untouched: change the logo in the Customizer and visitors kept
+		// seeing the old one until the cache expired on its own.
+		add_action( 'customize_save_after', array( $this, 'on_change' ), 0 );
+		add_action( 'update_option_sidebars_widgets', array( $this, 'on_change' ), 0 );
+		add_action( 'personal_options_update', array( $this, 'on_change' ), 0 );
+		add_action( 'activated_plugin', array( $this, 'on_change' ), 0 );
+		add_action( 'deactivated_plugin', array( $this, 'on_change' ), 0 );
+		add_action( 'upgrader_process_complete', array( $this, 'on_change' ), 0 );
+
+		// Site-wide options: the title, the front page, how many posts per page.
+		add_action( 'updated_option', array( $this, 'on_option_change' ), 0 );
+
 		// cron job
 		add_action( 'supc_purge_cache', array( $this, 'purge_cache' ) );
 		add_action( 'init', array( $this, 'schedule_events' ) );
@@ -166,10 +179,39 @@ class SpeedUp_PageCache {
 			return $cache_on_post_change[ $post_id ];
 		}
 
+		// The Site Editor stores templates, template parts, global styles and
+		// navigation as posts. Purging "that post's URL" is meaningless for them:
+		// they have no URL of their own, and they change every page that uses
+		// them. On a block theme, saving a template used to leave the whole site
+		// cached as it was.
+		if ( SpeedUp_CacheUtils::post_affects_whole_site( $post_id ) ) {
+			$cache_on_post_change[ $post_id ] = $this->on_change();
+
+			return $cache_on_post_change[ $post_id ];
+		}
+
 		$cache_on_post_change[ $post_id ] = SpeedUp_CacheUtils::purge_cache_post( $post_id );
 
 		return $cache_on_post_change[ $post_id ];
 	}
+
+	/**
+	 * Purge everything when a site-wide option changes.
+	 *
+	 * @since  1.0.24
+	 * @access public
+	 * @param  string $option
+	 * @return boolean
+	 */
+	public function on_option_change( $option ) {
+
+		if ( ! SpeedUp_CacheUtils::is_site_wide_option( $option ) ) {
+			return false;
+		}
+
+		return $this->on_change();
+	}
+
 
 	/**
 	 * supc_save_config hook.
@@ -235,7 +277,20 @@ class SpeedUp_PageCache {
 	 * @return boolean
 	 */
 	public function on_change() {
-		return $this->purge_cache();
+		static $purged = null;
+
+		// Saving Settings > General writes blogname and blogdescription in the
+		// same request, and each write fires the hook. Emptying the whole cache
+		// directory twice for one click is waste, so the first purge wins and the
+		// rest of the request reuses its result. Same reasoning as the
+		// memoisation in on_post_change().
+		if ( null !== $purged ) {
+			return $purged;
+		}
+
+		$purged = $this->purge_cache();
+
+		return $purged;
 	}
 
 	/**
