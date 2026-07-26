@@ -5,7 +5,7 @@ Tags: page cache, full page cache, static html, purge cache, performance
 Requires at least: 6.0
 Requires PHP: 7.0
 Tested up to: 7.0
-Stable tag: 1.0.21
+Stable tag: 1.0.22
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,12 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.22 =
+* Fix PHP 8 warnings that could end up inside cached pages when SERVER_PORT, QUERY_STRING, SCRIPT_NAME or REQUEST_URI are not set
+* Stop discarding the first line of wp-config.php when it is not the PHP opening tag, which could delete a hosting comment
+* Escape the cached URL list and the exception textarea on the settings page
+* Declare minimum requirements: WordPress 6.0 and PHP 7.0
 
 = 1.0.21 =
 * Tested up to Wordpress 7.0
