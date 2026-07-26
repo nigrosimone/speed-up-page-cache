@@ -72,6 +72,27 @@ Activation does three things, and each one needs to be possible:
 If any step fails the plugin says so in the dashboard, with the manual instructions. It
 never fails silently.
 
+### Three tiers, not one
+
+A cached page can be served three ways, and which one you got is visible in the response
+headers:
+
+| Tier | Served by | Cost |
+| --- | --- | --- |
+| 1 | **Apache**, straight from the file via a `.htaccess` rewrite | PHP never starts |
+| 2 | The drop-in, reading the file — marked `x-supc-managedby: PHP` | PHP starts, WordPress doesn't |
+| 3 | WordPress rendering the page and caching the result | Everything |
+
+Tier 1 is why the plugin writes to `.htaccess` at activation. If you see the
+`x-supc-managedby: PHP` header, you were served by tier 2 — usually because the URL has a
+query string or no trailing slash, which the rewrite rule deliberately doesn't match.
+
+Requests carrying only tracking parameters are served from tier 2, not tier 1. Extending
+the rewrite rule to recognise them would mean keeping a regex on `QUERY_STRING` in sync with
+the PHP list by hand, and a mismatch between the two would mean Apache serving a cached page
+for a query string PHP considers significant — the wrong content, with no PHP able to
+intervene. The asymmetry is deliberate.
+
 ## Settings and purging
 
 **Settings → Page Cache** offers:

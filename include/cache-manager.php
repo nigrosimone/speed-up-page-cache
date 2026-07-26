@@ -95,7 +95,9 @@ class SpeedUp_CacheManager {
 			}
 		}
 
-		@file_put_contents( $path . '_index.html', $buffer . "\n<!-- Cache served by Speed Up - Page Cache, last modified: " . gmdate( 'D, d M Y H:i:s', time() ) . " GMT -->\n" );
+		$contents = $buffer . "\n<!-- Cache served by Speed Up - Page Cache, last modified: " . gmdate( 'D, d M Y H:i:s', time() ) . " GMT -->\n";
+
+		SpeedUp_CacheUtils::write_atomic( $path . '_index.html', $contents );
 
 		return $buffer;
 	}
@@ -123,7 +125,10 @@ class SpeedUp_CacheManager {
 
 		$path = $cache_dir . $url_path . '_index.html';
 
-		if ( @file_exists( $path ) && @is_readable( $path ) ) {
+		// La dimensione va controllata, non solo l'esistenza: un file vuoto,
+		// residuo di una scrittura interrotta, verrebbe servito come una pagina
+		// bianca con codice 200. Meglio rigenerarla.
+		if ( @file_exists( $path ) && @is_readable( $path ) && @filesize( $path ) > 0 ) {
 			header( 'x-supc-managedby: PHP' );
 			@readfile( $path );
 			exit;
@@ -348,7 +353,11 @@ class SpeedUp_CacheManager {
 		// Come sopra: nessuna funzione di WordPress e' disponibile a questo punto.
 		// Il valore diventa un percorso su disco, mai output.
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$uri  = strtok( $_SERVER['REQUEST_URI'], '?' );
+		$uri = strtok( $_SERVER['REQUEST_URI'], '?' );
+
+		if ( SpeedUp_CacheUtils::path_escapes_cache_dir( $uri ) ) {
+			return null;
+		}
 		$path = str_replace( '/', DIRECTORY_SEPARATOR, $host . $uri );
 		return trim( $path, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
 	}

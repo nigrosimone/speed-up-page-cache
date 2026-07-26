@@ -222,6 +222,12 @@ class SpeedUp_PageCache {
 	public function supc_save_config() {
 		$this->unschedule_events();
 		$this->schedule_events();
+
+		// Salvare la configurazione cambia quali URL sono cacheabili. Senza
+		// svuotare, aggiungere un URL alle eccezioni lasciava in cache la copia
+		// gia' salvata, e Apache continuava a servirla dalla regola di rewrite,
+		// dove nessun controllo PHP puo' intervenire.
+		return $this->on_change();
 	}
 
 	/**
@@ -244,7 +250,15 @@ class SpeedUp_PageCache {
 	 */
 	public function unschedule_events() {
 		$timestamp = wp_next_scheduled( 'supc_purge_cache' );
-		wp_unschedule_event( $timestamp, 'supc_purge_cache' );
+
+		// wp_next_scheduled() restituisce false se non c'e' nulla in programma:
+		// passarlo a wp_unschedule_event() significa chiedere di annullare un
+		// evento a un istante che non esiste.
+		if ( false === $timestamp ) {
+			return false;
+		}
+
+		return wp_unschedule_event( $timestamp, 'supc_purge_cache' );
 	}
 
 	/**

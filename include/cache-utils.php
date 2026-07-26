@@ -61,6 +61,10 @@ class SpeedUp_CacheUtils {
 	public static function url_to_path( $url ) {
 		$url_parsed = parse_url( $url );
 
+		if ( self::path_escapes_cache_dir( $url ) ) {
+			return null;
+		}
+
 		$url_host = isset( $url_parsed['host'] ) ? $url_parsed['host'] : '';
 
 		if ( empty( $url_host ) ) {
@@ -577,5 +581,61 @@ class SpeedUp_CacheUtils {
 		);
 
 		return in_array( $option, $options, true );
+	}
+
+	/**
+	 * Write a file so that a reader never sees it half-written.
+	 *
+	 * file_put_contents() is not atomic. Two concurrent requests for the same
+	 * uncached page both render it and both write the same file, and a reader —
+	 * Apache serving the file directly, or the drop-in reading it — can catch it
+	 * mid-write and serve a truncated page. It responds 200 and looks fine in the
+	 * logs, which is what makes it hard to notice.
+	 *
+	 * Writing to a temporary file and renaming is atomic on the same filesystem:
+	 * a reader sees either the old file or the new one, never a partial one.
+	 *
+	 * @since  1.0.24
+	 * @static
+	 * @access public
+	 * @param  string $path
+	 * @param  string $contents
+	 * @return boolean
+	 */
+	public static function write_atomic( $path, $contents ) {
+
+		$temporary = dirname( $path ) . DIRECTORY_SEPARATOR . '.supc-' . uniqid( '', true ) . '.tmp';
+
+		if ( false === @file_put_contents( $temporary, $contents ) ) {
+			return false;
+		}
+
+		if ( @rename( $temporary, $path ) ) {
+			return true;
+		}
+
+		// Il rename e' fallito: il file temporaneo non va lasciato in giro.
+		@unlink( $temporary );
+
+		return false;
+	}
+
+	/**
+	 * Return true when a request path would escape the cache directory.
+	 *
+	 * The cache path is built from the requested URI, and the result is passed to
+	 * mkdir, file_put_contents and unlink. A ".." segment would put all three
+	 * outside the cache directory. WordPress would normally answer 404 for such a
+	 * URI, and a 404 is not cached — but a function that writes and deletes files
+	 * should not rely on something else having said no first.
+	 *
+	 * @since  1.0.24
+	 * @static
+	 * @access public
+	 * @param  string $path
+	 * @return boolean
+	 */
+	public static function path_escapes_cache_dir( $path ) {
+		return false !== strpos( (string) $path, '..' );
 	}
 }
