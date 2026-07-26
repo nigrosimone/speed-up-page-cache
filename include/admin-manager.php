@@ -141,7 +141,7 @@ class SpeedUp_AdminManager {
 							'title'  => 'Purge Current Page',
 							'href'   => wp_nonce_url(
 								network_admin_url(
-									'admin.php?page=speed-up-page-cache&amp;supc_action=supc_flush_url&amp;url=' . urlencode( $url )
+									'admin.php?page=speed-up-page-cache&amp;supc_action=supc_flush_url&amp;url=' . rawurlencode( $url )
 								),
 								'supc'
 							),
@@ -366,7 +366,7 @@ class SpeedUp_AdminManager {
 				$html .= '<input type="hidden" name="supc_redirect" value="' . esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) ) . '" />';
 				$html .= '<select name="url"  class="regular-text">';
 				foreach ( $cached_urls as $cached_url ) {
-					$html .= '<option>' . $cached_url . '</option>';
+					$html .= '<option>' . esc_html( $cached_url ) . '</option>';
 				}
 				$html .= '</select>';
 				$html .= '<input cass="button-secondary" type="submit" value="Purge URL Cache"><br />';
@@ -391,11 +391,11 @@ class SpeedUp_AdminManager {
 			$html           .= '<label for="cron_recurrence">Recurrence of cache purge: </label>';
 			$html           .= '<select name="cron_recurrence">';
 			$html           .= '<option disabled>-- SELECT --</option>';
-			$html           .= '<option ' . ( $cron_recurrence === 'hourly' ? 'selected' : '' ) . '>hourly</option>';
-			$html           .= '<option ' . ( $cron_recurrence === 'daily' ? 'selected' : '' ) . '>daily</option>';
-			$html           .= '<option ' . ( $cron_recurrence === 'twicedaily' ? 'selected' : '' ) . '>twicedaily</option>';
-			$html           .= '<option ' . ( $cron_recurrence === 'weekly' ? 'selected' : '' ) . '>weekly</option>';
-			$html           .= '<option ' . ( $cron_recurrence === 'montly' ? 'selected' : '' ) . '>montly</option>';
+			$html           .= '<option ' . ( 'hourly' === $cron_recurrence ? 'selected' : '' ) . '>hourly</option>';
+			$html           .= '<option ' . ( 'daily' === $cron_recurrence ? 'selected' : '' ) . '>daily</option>';
+			$html           .= '<option ' . ( 'twicedaily' === $cron_recurrence ? 'selected' : '' ) . '>twicedaily</option>';
+			$html           .= '<option ' . ( 'weekly' === $cron_recurrence ? 'selected' : '' ) . '>weekly</option>';
+			$html           .= '<option ' . ( 'montly' === $cron_recurrence ? 'selected' : '' ) . '>montly</option>';
 			$html           .= '</select><br />';
 			$html           .= '<span class="description">Choose the schedule recurrence for automatic cache purge.</span>';
 			$html           .= '<br /><br />';
@@ -404,7 +404,7 @@ class SpeedUp_AdminManager {
 			$html                .= '<label for="textarea">Cache exception urls: </label><br />';
 			$html                .= '<textarea name="cache_exception_urls" rows="10" cols="80" class="regular-text" style="width: 100%">';
 			if ( is_array( $cache_exception_urls ) ) {
-				$html .= implode( "\r\n", $cache_exception_urls );
+				$html .= esc_textarea( implode( "\r\n", $cache_exception_urls ) );
 			}
 			$html .= '</textarea><br />';
 			$html .= '<span class="description">Choose url do not cache (one for line).</span>';
@@ -448,6 +448,10 @@ class SpeedUp_AdminManager {
 		$html .= '</div>'; // end post-body
 		$html .= '</div>'; // end wrap
 
+		// L'HTML e' assemblato in questo metodo e ogni valore interpolato passa
+		// da esc_attr, esc_html o esc_textarea. wp_kses_post non e' utilizzabile:
+		// strapperebbe i form, che sono il contenuto della pagina.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $html;
 	}
 

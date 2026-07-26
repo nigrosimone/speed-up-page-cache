@@ -72,7 +72,15 @@ class SpeedUp_WpconfigUtils {
 
 		$status_string = ( $status ) ? 'true' : 'false';
 
-		array_shift( $config_file );
+		// La prima riga viene scartata solo se e' davvero l'apertura di PHP.
+		// Scartarla comunque, come faceva prima, distruggeva silenziosamente il
+		// contenuto di chi ha un commento o una riga vuota in cima al proprio
+		// wp-config.php: e' il file piu' importante del sito, non un posto dove
+		// tirare a indovinare.
+		if ( isset( $config_file[0] ) && '<?php' === trim( $config_file[0] ) ) {
+			array_shift( $config_file );
+		}
+
 		array_unshift( $config_file, '<?php', 'define( "WP_CACHE", ' . $status_string . ' ); // Added by Speed Up - Page Cache' );
 
 		if ( ! @file_put_contents( $config_path, implode( PHP_EOL, $config_file ) ) ) {

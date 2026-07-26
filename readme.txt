@@ -1,7 +1,7 @@
 === Speed Up - Page Cache ===
 Contributors: nigro.simone
 Donate link: http://paypal.me/snwp
-Tags: seo, cache, page cache, caching, optimize, front-end optimization, performance, speed, web performance optimization, wordpress optimization tool
+Tags: page cache, full page cache, static html, purge cache, performance
 Requires at least: 6.0
 Requires PHP: 7.0
 Tested up to: 7.0

@@ -68,13 +68,13 @@ class SpeedUp_CacheManager {
 
 		// Don't cache non html buffer
 		if ( stripos( $buffer, '</html>' ) === false ) {
-			$this->sendHeaderMiss( 'response not html' );
+			$this->send_header_miss( 'response not html' );
 			return $buffer;
 		}
 
 		// Don't cache buffer with DONOTCACHEPAGE string
 		if ( stripos( $buffer, 'DONOTCACHEPAGE' ) !== false ) {
-			$this->sendHeaderMiss( 'response contains DONOTCACHEPAGE string' );
+			$this->send_header_miss( 'response contains DONOTCACHEPAGE string' );
 			return $buffer;
 		}
 
@@ -142,103 +142,103 @@ class SpeedUp_CacheManager {
 
 		// Cache only HTTP GET request
 		if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || strtoupper( $_SERVER['REQUEST_METHOD'] ) !== 'GET' ) {
-			$this->sendHeaderMiss( 'REQUEST_METHOD not GET' );
+			$this->send_header_miss( 'REQUEST_METHOD not GET' );
 			return false;
 		}
 
 		// Don't cache when URL query string are defined
-		if ( $_SERVER['QUERY_STRING'] !== '' ) {
-			$this->sendHeaderMiss( 'QUERY_STRING not empty' );
+		if ( '' !== $_SERVER['QUERY_STRING'] ) {
+			$this->send_header_miss( 'QUERY_STRING not empty' );
 			return false;
 		}
 
 		// Don't cache when DONOTCACHEPAGE is true
 		if ( defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE ) {
-			$this->sendHeaderMiss( 'DONOTCACHEPAGE costant is true' );
+			$this->send_header_miss( 'DONOTCACHEPAGE costant is true' );
 			return false;
 		}
 
 		// Don't cache during installing
 		if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) {
-			$this->sendHeaderMiss( 'WP_INSTALLING costant is true' );
+			$this->send_header_miss( 'WP_INSTALLING costant is true' );
 			return false;
 		}
 
 		// Don't cache ajax request
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-			$this->sendHeaderMiss( 'DOING_AJAX costant is true' );
+			$this->send_header_miss( 'DOING_AJAX costant is true' );
 			return false;
 		}
 
 		// Don't cache WordPress cron request
 		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
-			$this->sendHeaderMiss( 'DOING_CRON costant is true' );
+			$this->send_header_miss( 'DOING_CRON costant is true' );
 			return false;
 		}
 
 		// Don't cache WordPress admin
 		if ( defined( 'WP_ADMIN' ) ) {
-			$this->sendHeaderMiss( 'WP_ADMIN costant defined' );
+			$this->send_header_miss( 'WP_ADMIN costant defined' );
 			return false;
 		}
 
 		// Don't cache when is load only the half of WordPress
 		if ( defined( 'SHORTINIT' ) && SHORTINIT ) {
-			$this->sendHeaderMiss( 'SHORTINIT costant is true' );
+			$this->send_header_miss( 'SHORTINIT costant is true' );
 			return false;
 		}
 
 		// Don't cache Atom Publishing Protocol request
 		if ( defined( 'APP_REQUEST' ) && APP_REQUEST ) {
-			$this->sendHeaderMiss( 'APP_REQUEST costant is true' );
+			$this->send_header_miss( 'APP_REQUEST costant is true' );
 			return false;
 		}
 
 		// Don't cache XML-RPC API
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-			$this->sendHeaderMiss( 'XMLRPC_REQUEST costant is true' );
+			$this->send_header_miss( 'XMLRPC_REQUEST costant is true' );
 			return false;
 		}
 
 		// Don't cache in console mode
 		if ( PHP_SAPI === 'cli' ) {
-			$this->sendHeaderMiss( 'PHP_SAPI is cli' );
+			$this->send_header_miss( 'PHP_SAPI is cli' );
 			return false;
 		}
 
 		// Don't cache if session is defined
-		if ( defined( 'SID' ) && SID != '' ) {
-			$this->sendHeaderMiss( 'SID costant not empty' );
+		if ( defined( 'SID' ) && '' !== SID ) {
+			$this->send_header_miss( 'SID costant not empty' );
 			return false;
 		}
 
 		// Don't cache if user is logged
 		if ( $this->has_cookie() ) {
-			$this->sendHeaderMiss( ' request ha rejected COOKIES' );
+			$this->send_header_miss( ' request ha rejected COOKIES' );
 			return false;
 		}
 
 		// Don't cache admin page
 		if ( function_exists( 'is_admin' ) && is_admin() ) {
-			$this->sendHeaderMiss( 'is_admin return true' );
+			$this->send_header_miss( 'is_admin return true' );
 			return false;
 		}
 
 		// Don't cache password protected.
 		if ( isset( $post ) && ! empty( $post->post_password ) ) {
-			$this->sendHeaderMiss( 'post has password' );
+			$this->send_header_miss( 'post has password' );
 			return false;
 		}
 
 		// check if SUPC_CACHEABLE is false
 		if ( defined( 'SUPC_CACHEABLE' ) && SUPC_CACHEABLE === false ) {
-			$this->sendHeaderMiss( 'SUPC_CACHEABLE costant is false' );
+			$this->send_header_miss( 'SUPC_CACHEABLE costant is false' );
 			return false;
 		}
 
 		// check if wp-login.php page
 		if ( strpos( $_SERVER['SCRIPT_NAME'], 'wp-login.php' ) !== false ) {
-			$this->sendHeaderMiss( 'wp-login.php not cacheable' );
+			$this->send_header_miss( 'wp-login.php not cacheable' );
 			return false;
 		}
 
@@ -246,32 +246,32 @@ class SpeedUp_CacheManager {
 
 		// check if filter is false
 		if ( apply_filters( 'speed_up_page_cache_cacheable', $url ) === false ) {
-			$this->sendHeaderMiss( 'speed_up_page_cache_cacheable filter return false' );
+			$this->send_header_miss( 'speed_up_page_cache_cacheable filter return false' );
 			return false;
 		}
 
 		// check if current url is in cache_exception_urls
 		$cache_exception_urls = $this->config->get( 'cache_exception_urls' );
-		if ( $url && is_array( $cache_exception_urls ) && in_array( $url, $cache_exception_urls ) ) {
-			$this->sendHeaderMiss( 'url is in cache_exception_urls' );
+		if ( $url && is_array( $cache_exception_urls ) && in_array( $url, $cache_exception_urls, true ) ) {
+			$this->send_header_miss( 'url is in cache_exception_urls' );
 			return false;
 		}
 
 		// check if 404
 		if ( function_exists( 'is_404' ) && is_404() ) {
-			$this->sendHeaderMiss( '404 page not found' );
+			$this->send_header_miss( '404 page not found' );
 			return false;
 		}
 
 		// check if rest request
 		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			$this->sendHeaderMiss( 'rest request' );
+			$this->send_header_miss( 'rest request' );
 			return false;
 		}
 
 		// check if feed
 		if ( function_exists( 'is_feed' ) && is_feed() ) {
-			$this->sendHeaderMiss( 'feed request' );
+			$this->send_header_miss( 'feed request' );
 			return false;
 		}
 
@@ -309,7 +309,7 @@ class SpeedUp_CacheManager {
 	 * @access private
 	 * @return string
 	 */
-	private function sendHeaderMiss( $reason ) {
+	private function send_header_miss( $reason ) {
 		if ( ! headers_sent() ) {
 			header( 'x-supc-miss: ' . $reason );
 		}

@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<ruleset name="Speed Up - Page Cache">
+
+    <description>Regole di stile WordPress. Questo ruleset e' BLOCCANTE in CI: il conteggio
+    delle violazioni e' a zero e deve restarci. Se una regola va disattivata, va
+    disattivata qui con una motivazione esplicita, non ignorata.</description>
+
+    <file>.</file>
+
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+    <exclude-pattern>/build/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="parallel" value="8"/>
+    <arg value="sp"/>
+
+    <rule ref="WordPress-Extra">
+        <!-- I plugin sono file storici: la convenzione class-*.php richiederebbe
+             di rinominarli, rompendo le installazioni esistenti. -->
+        <exclude name="WordPress.Files.FileName"/>
+
+        <!-- QUESTO PLUGIN GIRA PRIMA DI WORDPRESS.
+             advanced-cache.php viene caricato da wp-settings.php molto presto e
+             include cache-manager.php, che include cache-utils.php. A quel
+             punto WP_Filesystem non esiste, e nemmeno wp_parse_url(): usarli
+             sarebbe un fatal error, non una buona pratica. Anche in bacheca,
+             scrivere wp-config.php e .htaccess via WP_Filesystem farebbe
+             comparire la richiesta delle credenziali FTP a ogni salvataggio. -->
+        <exclude name="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents"/>
+        <exclude name="WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents"/>
+        <exclude name="WordPress.WP.AlternativeFunctions.file_system_operations_readfile"/>
+        <exclude name="WordPress.WP.AlternativeFunctions.unlink_unlink"/>
+        <exclude name="WordPress.WP.AlternativeFunctions.parse_url_parse_url"/>
+
+        <!-- Le operazioni su file sono silenziate con @ e il loro esito e'
+             sempre controllato dal valore di ritorno. Senza @, un wp-config.php
+             in sola lettura riempirebbe il log degli utenti di warning a ogni
+             richiesta, senza aggiungere informazione a quella che il plugin
+             mostra gia' in bacheca. -->
+        <exclude name="WordPress.PHP.NoSilencedErrors.Discouraged"/>
+
+        <!-- Le letture di $_REQUEST stanno nel livello di cache, che decide da
+             quale URL derivare la chiave: gira prima che WordPress sia caricato
+             e non compie alcuna azione di stato, quindi un nonce non c'entra.
+             Le azioni di amministrazione, quelle si', hanno tutte wp_nonce_field. -->
+        <exclude name="WordPress.Security.NonceVerification.Recommended"/>
+
+        <!-- SUPC_DROPIN e' definita da advanced-cache.php, che viene COPIATO in
+             wp-content/ all'attivazione e non viene rigenerato a ogni
+             aggiornamento del plugin. Rinominarla romperebbe le installazioni
+             esistenti: dopo l'update, il drop-in vecchio definirebbe ancora il
+             nome vecchio e la bacheca lo segnalerebbe come assente. -->
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound"/>
+    </rule>
+
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="speed-up-page-cache"/>
+            </property>
+        </properties>
+    </rule>
+
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="SpeedUp_"/>
+                <!-- supc_ e' l'abbreviazione usata dagli hook pubblici del plugin:
+                     rinominarli romperebbe chi vi si e' agganciato. -->
+                <element value="supc_"/>
+                <element value="speed_up_page_cache_"/>
+            </property>
+        </properties>
+    </rule>
+
+</ruleset>

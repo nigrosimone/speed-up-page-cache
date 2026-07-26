@@ -72,7 +72,7 @@ class SpeedUp_HtaccessUtils {
 				}
 
 				// remove the line if is in a Speed Up section
-				if ( $speed_up_directives === true ) {
+				if ( true === $speed_up_directives ) {
 					unset( $old_lines[ $i ] );
 				}
 
@@ -85,7 +85,7 @@ class SpeedUp_HtaccessUtils {
 
 			if ( ! is_null( $speed_up_directives ) ) {
 				// broken htaccess!
-				if ( $speed_up_directives === true ) {
+				if ( true === $speed_up_directives ) {
 					return false;
 				}
 			}

@@ -103,7 +103,10 @@ class SpeedUp_ConfigManager {
 		$config = array_merge( $this->config, $config );
 
 		if ( is_array( $config ) ) {
-			$config_file_string = '<?php ' . "\n\r" . "if ( !defined('ABSPATH') ) exit;" . "\n\r" . 'return ' . var_export( $config, true ) . '; ' . "\n\r";
+			// var_export genera qui il contenuto di un file PHP di configurazione:
+			// non e' una traccia di debug lasciata per sbaglio.
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export
+			$config_file_string = "<?php\n\rif ( !defined('ABSPATH') ) exit;\n\rreturn " . var_export( $config, true ) . "; \n\r";
 
 			if ( ! @file_put_contents( $filename, $config_file_string ) ) {
 				return false;
@@ -127,11 +130,11 @@ class SpeedUp_ConfigManager {
 	 * @since 1.0.5
 	 * @access public
 	 * @param string $key
-	 * @param mixed $default
+	 * @param mixed $fallback
 	 * @return mixed
 	 */
-	public function get( $key, $default = null ) {
-		return isset( $this->config[ $key ] ) ? $this->config[ $key ] : $default;
+	public function get( $key, $fallback = null ) {
+		return isset( $this->config[ $key ] ) ? $this->config[ $key ] : $fallback;
 	}
 
 	/**

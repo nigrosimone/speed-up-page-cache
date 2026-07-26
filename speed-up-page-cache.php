@@ -160,15 +160,15 @@ class SpeedUp_PageCache {
 	 * @return boolean
 	 */
 	public function on_post_change( $post_id ) {
-		static $_CACHE_ON_POST_CHANGE = array();
+		static $cache_on_post_change = array();
 
-		if ( isset( $_CACHE_ON_POST_CHANGE[ $post_id ] ) ) {
-			return $_CACHE_ON_POST_CHANGE[ $post_id ];
+		if ( isset( $cache_on_post_change[ $post_id ] ) ) {
+			return $cache_on_post_change[ $post_id ];
 		}
 
-		$_CACHE_ON_POST_CHANGE[ $post_id ] = SpeedUp_CacheUtils::purge_cache_post( $post_id );
+		$cache_on_post_change[ $post_id ] = SpeedUp_CacheUtils::purge_cache_post( $post_id );
 
-		return $_CACHE_ON_POST_CHANGE[ $post_id ];
+		return $cache_on_post_change[ $post_id ];
 	}
 
 	/**
@@ -215,13 +215,13 @@ class SpeedUp_PageCache {
 		if ( ! isset( $schedules['weekly'] ) ) {
 			$schedules['weekly'] = array(
 				'interval' => DAY_IN_SECONDS * 7,
-				'display'  => __( 'Once week' ),
+				'display'  => __( 'Once week', 'speed-up-page-cache' ),
 			);
 		}
 		if ( ! isset( $schedules['montly'] ) ) {
 			$schedules['montly'] = array(
 				'interval' => DAY_IN_SECONDS * 30,
-				'display'  => __( 'Once month' ),
+				'display'  => __( 'Once month', 'speed-up-page-cache' ),
 			);
 		}
 		return $schedules;

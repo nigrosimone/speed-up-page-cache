@@ -80,8 +80,8 @@ class SpeedUp_AdminNotice {
 	 */
 	public function render() {
 		$html  = '';
-		$html .= '<div class="notice notice-' . $this->type . ' ' . ( $this->dismissible ? 'is-dismissible' : 'inline' ) . '">';
-		$html .= '<p>' . $this->message . '</p>';
+		$html .= '<div class="notice notice-' . esc_attr( $this->type ) . ' ' . ( $this->dismissible ? 'is-dismissible' : 'inline' ) . '">';
+		$html .= '<p>' . wp_kses_post( $this->message ) . '</p>';
 		$html .= '</div>';
 		return $html;
 	}
@@ -93,6 +93,8 @@ class SpeedUp_AdminNotice {
 	 * @access public
 	 */
 	public function print() {
+		// render() escapa il tipo con esc_attr e il messaggio con wp_kses_post.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->render();
 	}
 
