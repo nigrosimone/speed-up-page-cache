@@ -5,7 +5,7 @@ Tags: page cache, full page cache, static html, purge cache, performance
 Requires at least: 6.0
 Requires PHP: 7.0
 Tested up to: 7.0
-Stable tag: 1.0.22
+Stable tag: 1.0.23
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,10 @@ In addition, the site speed is used in Google's search ranking algorithm so cach
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.0.23 =
+* Serve cached pages to requests carrying only tracking parameters: traffic from ads, social networks and newsletters is no longer excluded from the cache
+* Recognise the tracking parameters used by Google, Meta, Microsoft, LinkedIn, TikTok, Instagram, Mailchimp, HubSpot, Matomo, Piwik and Yandex
 
 = 1.0.22 =
 * Fix PHP 8 warnings that could end up inside cached pages when SERVER_PORT, QUERY_STRING, SCRIPT_NAME or REQUEST_URI are not set
